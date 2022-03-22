@@ -1,0 +1,37 @@
+Tue Mar 22 17:31:56 2022
+
+Graph with 34 nodes, 79 edges.
+Algorithm: initial greedy | Budget: 50
+MC rounds = 100| Possibility of influence = normal | Epsilon = 0.05Time spend: 313930[µs]
+Sorted selecting nodes: 
+0 23 28 26 24 22 20 18 15 14 1 11 5 3 4 7 13 16 27 9 2 10 12 6 8 17 29 19 21 25 30 31 33 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 
+Tue Mar 22 17:49:31 2022
+
+Graph with 34 nodes, 78 edges.
+Algorithm: initial greedy | Budget: 50
+MC rounds = 100| Possibility of influence = normal | Epsilon = 0.05Time spend: 314955[µs]
+Sorted selecting nodes: 
+0 23 28 24 26 22 20 18 15 13 14 10 2 9 8 1 7 11 16 4 5 3 17 6 12 21 27 19 25 30 33 31 32 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 
+======================================================================
+Tue Mar 22 17:51:39 2022
+
+Graph with 34 nodes, 78 edges.
+Algorithm: initial greedy | Budget: 50
+MC rounds = 100| Possibility of influence = normal | Epsilon = 0.05Time spend: 315318[µs]
+Sorted selecting nodes: 
+0 23 28 24 26 22 20 18 15 13 14 11 25 1 16 4 3 2 5 9 8 7 12 6 10 17 19 30 27 33 29 31 21 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 
+Selecting nodes: 
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 
+The maxmin influence:
+0 0 0 0 0 0 0 0 0 0.24 0.22 0.32 0.39 0.41 0.38 0.51 0.78 0.76 0.78 0.85 0.91 0.88 0.95 0.91 0.95 0.97 0.95 0.97 0.98 0.99 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+======================================================================
+Tue Mar 22 17:55:32 2022
+Graph with 34 nodes, 78 edges.
+Algorithm: initial greedy | Budget: 50
+MC rounds = 100| Possibility of influence = normal | Epsilon = 0.05Time spend: 318592[µs]
+Sorted selecting nodes: 
+0 23 28 24 26 22 20 18 15 14 11 31 16 3 1 4 2 5 6 9 10 7 17 8 25 12 13 33 21 19 30 27 32 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 29 
+Selecting nodes: 
+0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 
+The maxmin influence:
+0 0 0 0 0 0 0 0 0 0.19 0.31 0.35 0.38 0.63 0.52 0.57 0.79 0.77 0.86 0.83 0.85 0.88 0.89 0.93 0.93 0.94 0.95 0.96 0.96 0.95 0.98 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
