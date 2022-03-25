@@ -442,10 +442,8 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
 
 int countNum(Graph g){
    int count = 0;
-   
-   for(int i=0; i<g.numVert; i++){
-      if(g.pre[i].size()==0){
-         cout<<g.pre[i].size()<<endl;
+   for(int i; i<g.numVert; i++){
+      if(g.pre[i].size()==1){
          count++;
       }
       
@@ -462,15 +460,15 @@ int main()
    Graph g;
    cout << "done" <<endl;
 
-   ifstream infile ("networks/graph_ic.inf"); // with 15229 nodes
+   // ifstream infile ("networks/graph_ic.inf"); // with 15229 nodes
    //ifstream infile ("networks/data.txt");
-   // ifstream infile ("networks/zachary"); // with 34 nodes
+   ifstream infile ("networks/zachary"); // with 34 nodes
    int u,v;
    double p;
    if (infile.is_open())
    {
       cout << "adding nodes to....";
-      for (int i = 0; i < 15229; i++){ // 15229
+      for (int i = 0; i < 34; i++){ // 15229
          g.addNode(i);
       }
       

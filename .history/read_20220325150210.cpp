@@ -442,10 +442,8 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
 
 int countNum(Graph g){
    int count = 0;
-   
-   for(int i=0; i<g.numVert; i++){
+   for(int i; i<g.numVert; i++){
       if(g.pre[i].size()==0){
-         cout<<g.pre[i].size()<<endl;
          count++;
       }
       

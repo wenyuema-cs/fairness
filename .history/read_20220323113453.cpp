@@ -16,7 +16,7 @@
 using namespace std;
 using namespace chrono;
 
-int BUDGET = 50;
+int BUDGET = 13;
 int MCROUNDS = 100;
 double EPSILON = 0.05;
 
@@ -94,7 +94,7 @@ class Graph
       nxt[u].push_back(v);
       pre[v].push_back(u);
       nxt_prob[u].push_back(p);
-      pre_prob[v].push_back(p);                                                                                                                                                                                                                                                      
+      pre_prob[v].push_back(p);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
       return;
    }
    //void write( ostream &out );
@@ -214,13 +214,19 @@ struct values
 };
 
 values greedy(Graph g, int k, int mc, double epsilon){
-   clock_t start_t, end_t;
-   double duration;
-   start_t = clock();
-   // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+   ofstream outfile ("log/log.txt",ios::app);
+   auto timenow = chrono::system_clock::to_time_t(chrono::system_clock::now());
+   if(outfile.is_open()){
+      outfile <<"======================================================================"<<endl;
+      outfile<< ctime(&timenow);
+      outfile<<"Graph with "<<g.numVert<<" nodes, "<< g.numEdge<<" edges."<<endl;
+      outfile<<"Algorithm: initial greedy | Budget: "<< k<<endl;
+      outfile<< "MC rounds = "<<mc<<"| Possibility of influence = normal | Epsilon = "<< epsilon ;
+   }
+   std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
    set<int> S, G;
    int sets [k];
-   vector<double> maxinf, tim;
+   vector<double> maxinf;
    for(int i=0; i<g.numVert;i++){
       G.insert(i);
    }
@@ -259,37 +265,30 @@ values greedy(Graph g, int k, int mc, double epsilon){
          }
          
       }
-      duration = (double)(end_t - start_t)/ CLOCKS_PER_SEC;
-
       maxinf.push_back(max_);
-      tim.push_back(duration);
       //cout<<"maxx: "<<max_<<endl;
       G.erase(node);
       S.insert(node);
       sets[_] = node;
       
-      cout<<"slecting "<<node<< " with time: "<< duration<<endl;
+      cout<<"slecting"<<node<< " "<<endl;
       
 
    }
-   // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-   // if(outfile.is_open()){
+   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+   if(outfile.is_open()){
       
-   //    outfile << "Time spend: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-   //    outfile<<"Sorted selecting nodes: "<<endl;
-   //    for(const auto& _ : sets){
-   //       outfile<<_<<" ";
-   //    }
-   //    outfile<<endl;
+      outfile << "Time spend: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+      outfile<<"Sorted selecting nodes: "<<endl;
+      for(const auto& _ : sets){
+         outfile<<_<<" ";
+      }
+      outfile<<endl;
      
-   // }
-   
-   values res ={S,maxinf,tim};
-   // res.set = ;
-   // res.inf = maxinf;
-   // res.time = times;
-   return res;
-   //return make_pair(S,maxinf);
+   }
+
+   outfile.close();
+   return value;
 }
 
 
@@ -371,19 +370,8 @@ vector<int> sort_indexes(const vector<int> &v) {
 }
 */
 
-struct valuesRR
-{
-   set<int> set;
-   // vector<double> inf;
-   vector<double> time;
-};
+set<int> rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
 
-valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
-
-   clock_t start_t, end_t;
-   double duration;
-   start_t = clock();
-   vector<double> tim;
    set<int> S;
 
    for(int i; i<k; i++){
@@ -408,12 +396,12 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
       // sorted by max -> min
       sort( V,V+g.numVert, [&](int i,int j){return counter[j]>counter[i];} );
       queue<int> candidate;
-      // cout<< "after sorted"<<endl;
+      cout<< "after sorted"<<endl;
       for(const auto&_:V){
-         // cout<<_<<" ";
+         cout<<_<<" ";
          candidate.push(_);
       }
-      // cout<<endl;  
+      cout<<endl;  
       //int node = V[0];
 
 
@@ -423,35 +411,17 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
          
          if(!is_in){
             S.insert(node);
-            // cout<<"has add node"<<node<<endl;
+            cout<<"has add node"<<node<<endl;
             
             break;
 
          }
          candidate.pop();
       }
-      duration = (double)(end_t - start_t)/ CLOCKS_PER_SEC;
-      tim.push_back(duration);
    
    }
+   return S;
 
-   valuesRR res ={S,tim};
-   return res;
-
-}
-
-int countNum(Graph g){
-   int count = 0;
-   
-   for(int i=0; i<g.numVert; i++){
-      if(g.pre[i].size()==0){
-         cout<<g.pre[i].size()<<endl;
-         count++;
-      }
-      
-   }
-   cout<<"there are "<<count<<" nodes without indegree."<<endl;
-   return count;
 }
 
 
@@ -509,94 +479,33 @@ int main()
 
    /* 
    // test of greedy
-   values res = greedy(g, BUDGET, MCROUNDS, EPSILON);
-
-   ofstream outfile ("log/log_greedy.txt",ios::app);
-   auto timenow = chrono::system_clock::to_time_t(chrono::system_clock::now());
+   pair<set<int>,vector<double>> res = greedy(g, BUDGET, MCROUNDS, EPSILON);
+   ofstream outfile ("log/log.txt",ios::app);
    if(outfile.is_open()){
-      outfile <<"======================================================================"<<endl;
-      outfile<< ctime(&timenow);
-      outfile<<"Graph with "<<g.numVert<<" nodes, "<< g.numEdge<<" edges."<<endl;
-      outfile<<"Algorithm: initial greedy | Budget: "<< BUDGET<<endl;
-      outfile<< "MC rounds = "<<MCROUNDS<<"| Possibility of influence = normal | Epsilon = "<< EPSILON <<endl;
-
       outfile<<"Selecting nodes: "<<endl;
-      // for (set<int, greater<double> >::iterator i = res.first.begin();i != res.first.end();i++){
-      //    outfile<<*i<<" ";
-      // }
-      for (const auto&i:res.set){
-         outfile<<i<<" ";
+      for (set<int, greater<double> >::iterator i = res.first.begin();i != res.first.end();i++){
+         outfile<<*i<<" ";
       }
-      outfile<<endl;
 
+      outfile<<endl;
       outfile<<"The maxmin influence:"<<endl;
-      for (const auto&i:res.inf){
-         outfile<<i<<" ";
-      }
-      outfile<<endl;
-
-      outfile<<"The time spend:"<<endl;
-      for (const auto&i:res.time){
-         outfile<<i<<" ";
+      for (double i =0;i<res.second.size();i++){
+         outfile<<res.second[i]<<" ";
       }
       outfile<<endl;
    }
-
    outfile.close();
+   return 0;
    */
-   
 
-   /*
+   /**/
    // test of RR
-   valuesRR res = rrSelect(g ,SAMPLE_SIZE, SAMPLE_ROUND, BUDGET);
-   
-   queue<int> rr_select;
-   vector<double> inf;
-   for (const auto&i:res.set){
-      rr_select.push(i);
-      pair<double,int> influence = icExp(g, rr_select, MCROUNDS, EPSILON);
-      inf.push_back(influence.first);
-   }   
-   
-
-
-
-   ofstream outfile ("log/log_RR.txt",ios::app);
-   auto timenow = chrono::system_clock::to_time_t(chrono::system_clock::now());
-   if(outfile.is_open()){
-      outfile <<"======================================================================"<<endl;
-      outfile<< ctime(&timenow);
-      outfile<<"Graph with "<<g.numVert<<" nodes, "<< g.numEdge<<" edges."<<endl;
-      outfile<<"Algorithm: initial RR | Budget: "<< BUDGET<<endl;
-      outfile<< "MC rounds = "<<MCROUNDS<<"| Possibility of influence = normal | Epsilon = "<< EPSILON <<endl;
-
-      outfile<<"Selecting nodes: "<<endl;
-      // for (set<int, greater<double> >::iterator i = res.first.begin();i != res.first.end();i++){
-      //    outfile<<*i<<" ";
-      // }
-      for (const auto&i:res.set){
-         outfile<<i<<" ";
-      }
-      outfile<<endl;
-
-      outfile<<"The maxmin influence:"<<endl;
-      for (const auto&i:inf){
-         outfile<<i<<" ";
-      }
-      outfile<<endl;
-
-      outfile<<"The time spend:"<<endl;
-      for (const auto&i:res.time){
-         outfile<<i<<" ";
-      }
-      outfile<<endl;
+   set<int> S = rrSelect(g ,SAMPLE_SIZE, SAMPLE_ROUND, BUDGET);
+   cout<< "Final selected nodes"<<endl;
+   for(const auto&_:S){
+      cout<<_<<" ";
+      
    }
-
-   outfile.close();   
-   */
-   
-
-
    /*
    // test of sort_indexes
    vector<int> counter;
@@ -605,11 +514,5 @@ int main()
    vector<int> after_s = sort_indexes(counter);
    */
 
-
-   /**/ 
-   // test of abnormal nodes
-   int a = countNum(g);
-
-return 0;
 
 }

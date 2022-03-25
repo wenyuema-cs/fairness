@@ -16,7 +16,7 @@
 using namespace std;
 using namespace chrono;
 
-int BUDGET = 50;
+int BUDGET = 33;
 int MCROUNDS = 100;
 double EPSILON = 0.05;
 
@@ -378,7 +378,7 @@ struct valuesRR
    vector<double> time;
 };
 
-valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
+set<int> rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
 
    clock_t start_t, end_t;
    double duration;
@@ -408,12 +408,12 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
       // sorted by max -> min
       sort( V,V+g.numVert, [&](int i,int j){return counter[j]>counter[i];} );
       queue<int> candidate;
-      // cout<< "after sorted"<<endl;
+      cout<< "after sorted"<<endl;
       for(const auto&_:V){
-         // cout<<_<<" ";
+         cout<<_<<" ";
          candidate.push(_);
       }
-      // cout<<endl;  
+      cout<<endl;  
       //int node = V[0];
 
 
@@ -423,7 +423,7 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
          
          if(!is_in){
             S.insert(node);
-            // cout<<"has add node"<<node<<endl;
+            cout<<"has add node"<<node<<endl;
             
             break;
 
@@ -436,22 +436,8 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
    }
 
    valuesRR res ={S,tim};
-   return res;
+   return S;
 
-}
-
-int countNum(Graph g){
-   int count = 0;
-   
-   for(int i=0; i<g.numVert; i++){
-      if(g.pre[i].size()==0){
-         cout<<g.pre[i].size()<<endl;
-         count++;
-      }
-      
-   }
-   cout<<"there are "<<count<<" nodes without indegree."<<endl;
-   return count;
 }
 
 
@@ -462,15 +448,15 @@ int main()
    Graph g;
    cout << "done" <<endl;
 
-   ifstream infile ("networks/graph_ic.inf"); // with 15229 nodes
+   // ifstream infile ("networks/graph_ic.inf"); // with 15229 nodes
    //ifstream infile ("networks/data.txt");
-   // ifstream infile ("networks/zachary"); // with 34 nodes
+   ifstream infile ("networks/zachary"); // with 34 nodes
    int u,v;
    double p;
    if (infile.is_open())
    {
       cout << "adding nodes to....";
-      for (int i = 0; i < 15229; i++){ // 15229
+      for (int i = 0; i < 34; i++){ // 15229
          g.addNode(i);
       }
       
@@ -507,11 +493,11 @@ int main()
    pair<int,int> res=icExp(g,select,100,0);
    */
 
-   /* 
+   /* */
    // test of greedy
    values res = greedy(g, BUDGET, MCROUNDS, EPSILON);
 
-   ofstream outfile ("log/log_greedy.txt",ios::app);
+   ofstream outfile ("log/log.txt",ios::app);
    auto timenow = chrono::system_clock::to_time_t(chrono::system_clock::now());
    if(outfile.is_open()){
       outfile <<"======================================================================"<<endl;
@@ -543,58 +529,18 @@ int main()
    }
 
    outfile.close();
-   */
+   return 0;
    
 
    /*
    // test of RR
-   valuesRR res = rrSelect(g ,SAMPLE_SIZE, SAMPLE_ROUND, BUDGET);
-   
-   queue<int> rr_select;
-   vector<double> inf;
-   for (const auto&i:res.set){
-      rr_select.push(i);
-      pair<double,int> influence = icExp(g, rr_select, MCROUNDS, EPSILON);
-      inf.push_back(influence.first);
-   }   
-   
-
-
-
-   ofstream outfile ("log/log_RR.txt",ios::app);
-   auto timenow = chrono::system_clock::to_time_t(chrono::system_clock::now());
-   if(outfile.is_open()){
-      outfile <<"======================================================================"<<endl;
-      outfile<< ctime(&timenow);
-      outfile<<"Graph with "<<g.numVert<<" nodes, "<< g.numEdge<<" edges."<<endl;
-      outfile<<"Algorithm: initial RR | Budget: "<< BUDGET<<endl;
-      outfile<< "MC rounds = "<<MCROUNDS<<"| Possibility of influence = normal | Epsilon = "<< EPSILON <<endl;
-
-      outfile<<"Selecting nodes: "<<endl;
-      // for (set<int, greater<double> >::iterator i = res.first.begin();i != res.first.end();i++){
-      //    outfile<<*i<<" ";
-      // }
-      for (const auto&i:res.set){
-         outfile<<i<<" ";
-      }
-      outfile<<endl;
-
-      outfile<<"The maxmin influence:"<<endl;
-      for (const auto&i:inf){
-         outfile<<i<<" ";
-      }
-      outfile<<endl;
-
-      outfile<<"The time spend:"<<endl;
-      for (const auto&i:res.time){
-         outfile<<i<<" ";
-      }
-      outfile<<endl;
+   set<int> S = rrSelect(g ,SAMPLE_SIZE, SAMPLE_ROUND, BUDGET);
+   cout<< "Final selected nodes"<<endl;
+   for(const auto&_:S){
+      cout<<_<<" ";
+      
    }
-
-   outfile.close();   
    */
-   
 
 
    /*
@@ -605,11 +551,5 @@ int main()
    vector<int> after_s = sort_indexes(counter);
    */
 
-
-   /**/ 
-   // test of abnormal nodes
-   int a = countNum(g);
-
-return 0;
 
 }

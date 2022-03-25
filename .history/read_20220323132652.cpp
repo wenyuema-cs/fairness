@@ -440,20 +440,6 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
 
 }
 
-int countNum(Graph g){
-   int count = 0;
-   
-   for(int i=0; i<g.numVert; i++){
-      if(g.pre[i].size()==0){
-         cout<<g.pre[i].size()<<endl;
-         count++;
-      }
-      
-   }
-   cout<<"there are "<<count<<" nodes without indegree."<<endl;
-   return count;
-}
-
 
 int main()
 {
@@ -546,7 +532,7 @@ int main()
    */
    
 
-   /*
+   /**/
    // test of RR
    valuesRR res = rrSelect(g ,SAMPLE_SIZE, SAMPLE_ROUND, BUDGET);
    
@@ -593,7 +579,7 @@ int main()
    }
 
    outfile.close();   
-   */
+
    
 
 
@@ -604,12 +590,6 @@ int main()
    counter.push_back(2); 
    vector<int> after_s = sort_indexes(counter);
    */
-
-
-   /**/ 
-   // test of abnormal nodes
-   int a = countNum(g);
-
 return 0;
 
 }

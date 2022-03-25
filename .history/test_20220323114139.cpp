@@ -21,7 +21,7 @@ double count_time(){
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     end_t = clock();
     cout<<end_t<<endl;
-    duration = (double)(end_t - start_t) ;
+    duration = (double)(end_t - start_t) / CLOCKS_PER_SEC;
     cout << "Total time taken by CPU: "<<duration <<endl;
     cout << "Time spend: " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
 

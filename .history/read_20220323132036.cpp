@@ -16,7 +16,7 @@
 using namespace std;
 using namespace chrono;
 
-int BUDGET = 50;
+int BUDGET = 33;
 int MCROUNDS = 100;
 double EPSILON = 0.05;
 
@@ -408,12 +408,12 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
       // sorted by max -> min
       sort( V,V+g.numVert, [&](int i,int j){return counter[j]>counter[i];} );
       queue<int> candidate;
-      // cout<< "after sorted"<<endl;
+      cout<< "after sorted"<<endl;
       for(const auto&_:V){
-         // cout<<_<<" ";
+         cout<<_<<" ";
          candidate.push(_);
       }
-      // cout<<endl;  
+      cout<<endl;  
       //int node = V[0];
 
 
@@ -423,7 +423,7 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
          
          if(!is_in){
             S.insert(node);
-            // cout<<"has add node"<<node<<endl;
+            cout<<"has add node"<<node<<endl;
             
             break;
 
@@ -440,20 +440,6 @@ valuesRR rrSelect(Graph g, int SAMPLE_SIZE, int SAMPLE_ROUND, int k){
 
 }
 
-int countNum(Graph g){
-   int count = 0;
-   
-   for(int i=0; i<g.numVert; i++){
-      if(g.pre[i].size()==0){
-         cout<<g.pre[i].size()<<endl;
-         count++;
-      }
-      
-   }
-   cout<<"there are "<<count<<" nodes without indegree."<<endl;
-   return count;
-}
-
 
 int main()
 {
@@ -462,15 +448,15 @@ int main()
    Graph g;
    cout << "done" <<endl;
 
-   ifstream infile ("networks/graph_ic.inf"); // with 15229 nodes
+   // ifstream infile ("networks/graph_ic.inf"); // with 15229 nodes
    //ifstream infile ("networks/data.txt");
-   // ifstream infile ("networks/zachary"); // with 34 nodes
+   ifstream infile ("networks/zachary"); // with 34 nodes
    int u,v;
    double p;
    if (infile.is_open())
    {
       cout << "adding nodes to....";
-      for (int i = 0; i < 15229; i++){ // 15229
+      for (int i = 0; i < 34; i++){ // 15229
          g.addNode(i);
       }
       
@@ -546,7 +532,7 @@ int main()
    */
    
 
-   /*
+   /**/
    // test of RR
    valuesRR res = rrSelect(g ,SAMPLE_SIZE, SAMPLE_ROUND, BUDGET);
    
@@ -579,12 +565,6 @@ int main()
       }
       outfile<<endl;
 
-      outfile<<"The maxmin influence:"<<endl;
-      for (const auto&i:inf){
-         outfile<<i<<" ";
-      }
-      outfile<<endl;
-
       outfile<<"The time spend:"<<endl;
       for (const auto&i:res.time){
          outfile<<i<<" ";
@@ -593,7 +573,7 @@ int main()
    }
 
    outfile.close();   
-   */
+
    
 
 
@@ -604,12 +584,6 @@ int main()
    counter.push_back(2); 
    vector<int> after_s = sort_indexes(counter);
    */
-
-
-   /**/ 
-   // test of abnormal nodes
-   int a = countNum(g);
-
 return 0;
 
 }
