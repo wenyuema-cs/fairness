@@ -1,0 +1,55 @@
+#include <chrono>
+#include <iostream>
+#include"strategies.h"
+
+using namespace std;
+using namespace std :: chrono;
+
+
+void logRec(Graph g, values res, inPut in, string method){
+// void logRec(Graph g, values res, inPut in, string method){
+   ofstream outfile ("log/log_"+method+".txt",ios::app);
+   auto timenow = chrono::system_clock::to_time_t(chrono::system_clock::now());
+   string distribution;
+   if(in.dataset == "zachary_01"){
+      distribution = "0.1";
+   }else{
+      distribution = "normal";
+   }
+
+   if(outfile.is_open()){
+      outfile <<"======================================================================"<<endl;
+      outfile<< ctime(&timenow);
+      outfile<<"Dataset: "<<in.dataset<<endl;
+      outfile<<"Graph with "<<g.numVert<<" nodes, "<< g.numEdge<<" edges."<<endl;
+      outfile<<"Algorithm: initial "<<method<<" | Budget: "<< in.BUDGET<<endl;
+      outfile<< "MC rounds = "<<in.MCROUNDS<<"| Possibility of influence = "<<distribution <<" | Epsilon = "<< in.EPSILON <<endl;
+      if(method.compare("RR")==0){
+          outfile<<""<<in.SAMPLE_ROUND<<endl;
+      }
+
+      outfile<<"Selecting nodes: "<<endl;
+      // for (set<int, greater<double> >::iterator i = res.first.begin();i != res.first.end();i++){
+      //    outfile<<*i<<" ";
+      // }
+      for (const auto&i:res.sed){
+         outfile<<i<<", ";
+      }
+      outfile<<endl;
+
+      outfile<<"The maxmin influence:"<<endl;
+      for (const auto&i:res.inf){
+         outfile<<i<<", ";
+      }
+      outfile<<endl;
+
+      outfile<<"The time spend:"<<endl;
+      for (const auto&i:res.time){
+         outfile<<i<<", ";
+      }
+      outfile<<endl;
+   }
+
+   outfile.close();
+}
+   
