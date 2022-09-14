@@ -896,7 +896,7 @@ values myOpic_hyper(InfGraph g, int k, int mc){
          s=QueueS;
          s.push(*j);
          //cout<<"search max with node:"<<*j<<endl;
-         float* counter = icExp_hyper(g, s, mc);
+         float* counter = icExp_hyperG(g, s, mc);
          int min = *min_element(counter+0,counter+g.numVert);
 
          double exp_j;
@@ -932,15 +932,17 @@ values myOpic_hyper(InfGraph g, int k, int mc){
       
 
    }
-/**/ 
+   /**/ 
    queue<int> myopic_select;
-   cout<<"sorted selected"<<endl;
-   for(long unsigned int i=0;i<Q.size();i++){
-      int node = Q[i];
-      cout<<Q[i]<<" ";
-      myopic_select.push(node);
+   // cout<<"sorted selected"<<endl;
+   g.init_hyper_graph();
+   g.build_hyper_graph_r(mc);
+   for(int i=0;i<k;i++){
+      // int node = Q[i];
+      // cout<<Q[i]<<" ";
+      myopic_select.push(Q[i]);
       // cout <<"now we propogate adding node:" << i <<endl;
-      float* counter = icExp_lazy(g, myopic_select, mc);
+      float* counter = icExp_hyperG(g, myopic_select, mc);
       int min = *min_element(counter+0,counter+g.numVert);
       maxinf.push_back(min*1.0/mc);
       // printf("spread as %f",min*1.0/mc);
@@ -1172,8 +1174,8 @@ values rrSelect_hyper(InfGraph g, int k, int MCROUNDS, double EPSILON){
 
    vector<double> inf;
    queue<int> RR_select;
-   // g.init_hyper_graph();
-   // g.build_hyper_graph_r(MCROUNDS);
+   g.init_hyper_graph();
+   g.build_hyper_graph_r(MCROUNDS);
    // cout<<"sorted selected"<<endl;
    for(int i=0;i<k;i++){
       // cout<<Q[i]<<" ";
