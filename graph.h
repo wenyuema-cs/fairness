@@ -41,6 +41,7 @@ void srandx(unsigned int seed)
     num = seed;
 }
 
+
 struct inPut{
    int BUDGET ;
    int MCROUNDS ;

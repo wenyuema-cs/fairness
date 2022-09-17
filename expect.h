@@ -64,6 +64,7 @@ pair<double,int> icExp(Graph g, queue<int> s,int mc,double epsilon){
          for (long unsigned int neighbor =0; neighbor < g.nxt[candi].size(); neighbor++){
             //cout<<"node "<<g.nxt[candi][neighbor]<<" may have chance be activate "<<endl;
             if((g.nxt_prob[candi][neighbor] > randam()) && (g.act[g.nxt[candi][neighbor]]==0)){
+            // if((g.nxt_prob[candi][neighbor] > randx()) && (g.act[g.nxt[candi][neighbor]]==0)){
                g.act[g.nxt[candi][neighbor]] = 1;
                // cout<<"node active: "<< g.nxt[candi][neighbor]<<endl;
                ss.push(g.nxt[candi][neighbor]);
@@ -104,7 +105,9 @@ pair<double,int> icExp(Graph g, queue<int> s,int mc,double epsilon){
 
 float* icExp_lazy(Graph g, queue<int> s,int mc){ //, double alpha
 
+   srand (time(NULL));
    float *counter = (float*)malloc(sizeof(float)*g.numVert);
+   // srand (time(NULL));
 
    for (int i =0;i<g.numVert;i++){
       counter[i]=0;
@@ -138,7 +141,10 @@ float* icExp_lazy(Graph g, queue<int> s,int mc){ //, double alpha
          ss.pop();
          for (long unsigned int neighbor =0; neighbor < g.nxt[candi].size(); neighbor++){
             //cout<<"node "<<g.nxt[candi][neighbor]<<" may have chance be activate "<<endl;
-            if((g.nxt_prob[candi][neighbor] > randam()) && (g.act[g.nxt[candi][neighbor]]==0)){
+            double rn = randam();
+            if((g.nxt_prob[candi][neighbor] > rn) && (g.act[g.nxt[candi][neighbor]]==0)){
+            // if((g.nxt_prob[candi][neighbor] > randx()) && (g.act[g.nxt[candi][neighbor]]==0)){
+               // printf("random number: %f", rn);
                g.act[g.nxt[candi][neighbor]] = 1;
                // cout<<"node active: "<< g.nxt[candi][neighbor]<<endl;
                ss.push(g.nxt[candi][neighbor]);

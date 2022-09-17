@@ -1,6 +1,5 @@
 
 #include "log.h"
-
 using namespace std;
 using namespace std :: chrono;
 
@@ -49,10 +48,8 @@ int main(int argc, char *argv[])
    vector <double> time(BUDGET);
    values res;
 
-   for(int i = 1;i<TEST;i++){
 
-      g.init_hyper_graph();
-      g.build_hyper_graph_r(MCROUNDS);
+   for(int i = 1;i<TEST;i++){
       /* */
       // test of abnormal nodes
       // Graph g = moveIso(og);
@@ -81,10 +78,16 @@ int main(int argc, char *argv[])
 
       // test of RR
       if(method.compare("RR")==0){
-         // res = rrSelect(g , BUDGET,MCROUNDS, EPSILON);
+         printf("are we here\n");
+         res = rrSelect(g , BUDGET,MCROUNDS, EPSILON);
          // res = rrSelect_mysel_hyper(g , BUDGET,MCROUNDS, EPSILON);
-         res = rrSelect_hyper(g , BUDGET,MCROUNDS, EPSILON); 
+         // res = rrSelect_hyper(g , BUDGET,MCROUNDS, EPSILON); 
          // logRec(g, res, in, method);
+      }
+      if(method.compare("RR_hyper")==0){
+         g.init_hyper_graph();
+         g.build_hyper_graph_r(MCROUNDS);
+         res = rrSelect_hyper(g , BUDGET,MCROUNDS, EPSILON); 
       }
 
       // test of lazygreedy
@@ -101,11 +104,17 @@ int main(int argc, char *argv[])
       }   
       
       if(method.compare("myopic")==0){
+         res = myOpic(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
          // res = myOpic_trick(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
-         res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
-         
+         // res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
          // logRec(g, res, in, method);
       }
+
+      if(method.compare("myopic_hyper")==0){
+         g.init_hyper_graph();
+         g.build_hyper_graph_r(MCROUNDS);
+         res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
+      }      
       for(int j = 0;j<BUDGET;j++){
          double spread = res.inf[j];
          double clock = res.time[j];

@@ -6,6 +6,55 @@ using namespace std :: chrono;
 
 double SELECTEDGES = 1/32;
 
+void Median(float *a,int l,int r){
+    if( l < r ){
+        int i =l, j=r, x = a[l];
+        while(i<j ){
+            while(i<j && a[j]>=x){
+                j--;
+            }
+            if(i<j){
+                a[i] = a[j];
+            }
+            while(i<j && a[i]<x){
+                i++;
+            }
+            if(i<j){
+                a[j] = a[i];
+            }
+        }
+        a[i] = x;
+        Median(a,l,i-1);
+        Median(a,i+1,r);
+    }
+}
+
+
+float geoMean(float arr[], int n)
+{
+    // declare sum variable and
+    // initialize it to 1.
+    float sum = 0;
+ 
+    // Compute the sum of all the
+    // elements in the array.
+    for (int i = 0; i < n; i++){
+        if(arr[i]==0){
+            return 0;
+        }
+        sum = sum + log(arr[i]);
+        // printf("a[%d]:%d sum is %f\n",i,arr[i],sum);
+
+    }
+    // compute geometric mean through formula
+    // antilog(((log(1) + log(2) + . . . + log(n))/n)
+    // and return the value to main function.
+    sum = sum/ n;
+ 
+    return exp(sum);
+}
+
+
 values greedy(Graph g, int k, int mc, double epsilon){
    clock_t start_t, end_t;
    double duration;
@@ -760,6 +809,7 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
    start_t = clock();
 
    set<int> S, G;
+   vector<double> inf;
    vector<int> Q;
    vector<double> maxinf, tim;
    queue<int> s;
@@ -785,7 +835,7 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
    Q.push_back(fir_node);   
    int node = -1;
    for(int _ =0; _<k-1;_++){
-      double min_ = 0x3f3f3f;
+      // double min_ = 0x3f3f3f;
       set<int, greater<int> >::iterator i;
       set<int, greater<int> >::iterator j;
       queue<int> QueueS;
@@ -795,21 +845,29 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
          QueueS.push(*i);
       }
       
-      
-      for (j = G.begin(); j != G.end(); j++) {
-         s=QueueS;
-         s.push(*j);
-         //cout<<"search max with node:"<<*j<<endl;
-         pair<double,int> res = icExp(g, s, mc, epsilon);
-         double exp_j=res.first;
+      float* counter = icExp_lazy(g, QueueS, mc);
+      double min_expect = *min_element(counter+0, counter+g.numVert);
+      for(int i=0;i<g.numVert;i++){ //n is the size of array a[]
+         if(counter[i]==min_expect){
+            node = i;
+         } 
+      }
+
+
+      // for (j = G.begin(); j != G.end(); j++) {
+      //    s=QueueS;
+      //    s.push(*j);
+      //    //cout<<"search max with node:"<<*j<<endl;
+      //    pair<double,int> res = icExp(g, s, mc, epsilon);
+      //    double exp_j=res.first;
       
 
-         if(exp_j < min_){
-            min_ =exp_j;
-            node = *j;
-         }
+      //    if(exp_j < min_){
+      //       min_ =exp_j;
+      //       node = *j;
+      //    }
          
-      }
+      // }
       end_t = clock();
       duration = (double)(end_t - start_t)/ CLOCKS_PER_SEC;
       tim.push_back(duration);
@@ -817,6 +875,7 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
       G.erase(node);
       S.insert(node);
       Q.push_back(node);
+      inf.push_back(min_expect*1.0/mc);
 
 
       
@@ -825,22 +884,38 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
 
    }
 
-   vector<double> inf;
-   queue<int> greedy_select;
+   // vector<double> maxinf;
+   queue<int> myopic_select;
    cout<<"sorted selected"<<endl;
    for(long unsigned int i=0;i<Q.size();i++){
       int node = Q[i];
-      cout<<Q[i]<<" ";
-      greedy_select.push(node);
+      // cout<<Q[i]<<" ";
+      myopic_select.push(node);
       // cout <<"now we propogate adding node:" << i <<endl;
-      pair<double,int> influence = icExp(g, greedy_select, mc, epsilon);
-      inf.push_back(influence.first);
+      // pair<double,int> influence = icExp(g, myopic_select, mc, epsilon);
+      // inf.push_back(influence.first);
+      float* counter = icExp_lazy(g, myopic_select, mc);
+      // find GeoMean
+      for(int m=0;m<g.numVert;m++){
+         counter[m] = counter[m]*1.0/mc;
+      }
+      float mean_expect = geoMean(counter,g.numVert);
+
+
+      // find Median
+      // Median(counter,0,g.numVert-1);
+      // float med_expect = counter[g.numVert/2]*1.0/mc;
+
+      // find min_probability
+      // double min_expect = *min_element(counter+0, counter+g.numVert);
+      // min_expect = min_expect*1.0/mc;
+
+      maxinf.push_back(mean_expect);
+      
    }
-   cout<<endl;
-     
-   // }
+
    
-   values res ={Q,inf,tim};
+   values res ={Q,maxinf,tim};
    // res.sed = ;
    // res.inf = maxinf;
    // res.time = times;
@@ -1023,7 +1098,7 @@ int* RSet(Graph g, queue<int> t, set<int> s){
    // cout<<"----------------------"<<endl;
    // cout<<"V after sorted:"<<endl;
    // for (int i =0;i<g.numVert;i++){
-   //    cout<<V[i]<<" ";
+   //    cout<<V[i]<<"("<<counter[V[i]]<<") ";
    // }
    // cout<<endl;
    return V;
@@ -1082,10 +1157,6 @@ values rrSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
          }
       }
       
-
-
-      
-
       end_t = clock();
       duration = (double)(end_t - start_t) / CLOCKS_PER_SEC;
       tim.push_back(duration);
@@ -1099,8 +1170,27 @@ values rrSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
       // cout<<Q[i]<<" ";
       RR_select.push(Q[i]);
       // cout <<"now we propogate adding node:" << i <<endl;
-      pair<double,int> influence = icExp(g, RR_select, MCROUNDS, EPSILON);
-      inf.push_back(influence.first);
+      float* counter = icExp_lazy(g, RR_select, MCROUNDS);
+
+      // find GeoMean
+      
+      for(int m =0;m<g.numVert;m++){
+         counter[m] = counter[m]*1.0/MCROUNDS;
+      }
+      float mean_expect = geoMean(counter,g.numVert);
+
+      // find Median
+      // Median(counter,0,g.numVert-1);
+      // float med_expect = counter[g.numVert/2]*1.0/MCROUNDS;
+
+      //find minimial
+      // double min_expect = *min_element(counter+0, counter+g.numVert);
+      // cout<< "min_expect in budget "<<i<<": "<<min_expect <<endl;
+      // min_expect = min_expect*1.0/MCROUNDS;
+      inf.push_back(mean_expect);
+      // pair<double,int> influence = icExp(g, RR_select, MCROUNDS, EPSILON);
+      // double mininf = influence.first;
+      // inf.push_back(mininf);
    }
    // cout<<endl;
    
@@ -1183,9 +1273,15 @@ values rrSelect_hyper(InfGraph g, int k, int MCROUNDS, double EPSILON){
       // cout <<"now we propogate adding node:" << i <<endl;
       // pair<double,int> influence = icExp(g, RR_select, MCROUNDS, EPSILON);
       // inf.push_back(influence.first);
-      float* counter = icExp_hyperG(g, RR_select, MCROUNDS);
+
+      // float* counter = icExp_hyperG(g, RR_select, MCROUNDS);
+      float* counter = icExp_lazy(g, RR_select, MCROUNDS);
+
       double min = *min_element(counter+0,counter+g.numVert);
       min = min /MCROUNDS;
+      
+
+
       inf.push_back(min);
    }
    // cout<<endl;
