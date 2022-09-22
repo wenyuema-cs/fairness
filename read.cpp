@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
    values res;
 
 
-   for(int i = 1;i<TEST;i++){
+   for(int test = 1;test<=TEST;test++){
       /* */
       // test of abnormal nodes
       // Graph g = moveIso(og);
@@ -70,20 +70,27 @@ int main(int argc, char *argv[])
 
       
       if(method.compare("greedy")==0){
-         // res = greedy(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
-         res = greedy_hyper(g,  in.BUDGET, in.MCROUNDS, in.EPSILON);
+         res = greedy(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+         // res = greedy_hyper(g,  in.BUDGET, in.MCROUNDS, in.EPSILON);
 
          // logRec(g,res, in, method);
       }
 
       // test of RR
       if(method.compare("RR")==0){
-         printf("are we here\n");
          res = rrSelect(g , BUDGET,MCROUNDS, EPSILON);
          // res = rrSelect_mysel_hyper(g , BUDGET,MCROUNDS, EPSILON);
          // res = rrSelect_hyper(g , BUDGET,MCROUNDS, EPSILON); 
          // logRec(g, res, in, method);
       }
+
+      if(method.compare("sRR")==0){
+         res = rSelect(g , BUDGET,MCROUNDS, EPSILON);
+      }
+      if(method.compare("pRR")==0){
+         res = rpSelect(g , BUDGET,MCROUNDS, EPSILON);
+      }
+
       if(method.compare("RR_hyper")==0){
          g.init_hyper_graph();
          g.build_hyper_graph_r(MCROUNDS);
@@ -115,6 +122,10 @@ int main(int argc, char *argv[])
          g.build_hyper_graph_r(MCROUNDS);
          res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
       }      
+      if(method.compare("super")==0){
+         res = super(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+      }
+
       for(int j = 0;j<BUDGET;j++){
          double spread = res.inf[j];
          double clock = res.time[j];
@@ -122,7 +133,7 @@ int main(int argc, char *argv[])
          influence[j] += spread;
          time[j] += clock;
       }  
-      printf("we've finished %d round test\n",i);
+      printf("we've finished %d round test\n",test);
    }
    for(int j = 0;j<BUDGET;j++){
       influence[j] = influence[j]*1.0/TEST;

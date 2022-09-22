@@ -1,6 +1,7 @@
 #include <chrono>
 #include <iostream>
 #include"strategies.h"
+#include <fstream>
 
 using namespace std;
 using namespace std :: chrono;
@@ -51,5 +52,13 @@ void logRec(Graph g, values res, inPut in, string method){
    }
 
    outfile.close();
+
+   std::ofstream myfile;
+    myfile.open ("log/"+in.dataset+"_"+method+".csv");
+    myfile << "k;seed;inf;tim\n";
+    for(int i = 0;i<in.BUDGET;i++){
+        myfile << to_string(i)+";"+to_string(res.sed[i])+";"+to_string(res.inf[i])+";"+to_string(res.time[i])+"\n";
+    }
+    myfile.close();
 }
    
