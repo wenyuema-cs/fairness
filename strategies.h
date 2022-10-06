@@ -703,7 +703,7 @@ values myOpic_trick(Graph g, int k, int mc, double epsilon){
 }
 
 
-values myOpic(InfGraph g, int k, int mc, double epsilon){
+values myOpic(InfGraph g, int k, int MCROUNDS, double epsilon,string model){
    clock_t start_t, end_t;
    double duration;
    start_t = clock();
@@ -713,6 +713,8 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
    vector<int> Q;
    vector<double> maxinf, tim;
    queue<int> s;
+   // int add = {5};
+   int* counter = (int*)malloc(sizeof(int));
    for(int i=0; i<g.numVert;i++){
       G.insert(i);
    }
@@ -739,20 +741,28 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
       set<int, greater<int> >::iterator i;
       // set<int, greater<int> >::iterator j;
       queue<int> QueueS;
+      // printf("who is in seed set: ");
       for (i = S.begin(); i != S.end(); i++){
          // G.erase(*i);
-         
+         // cout<<*i<<" ";
          QueueS.push(*i);
       }
-      
-      int* counter = icExp_lazyI(g, QueueS, mc);
+      // cout<<endl;
+      if(model == "lt")
+         counter = ltExp(g, QueueS, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, QueueS, MCROUNDS);
       double min_expect = *min_element(counter+0, counter+g.numVert);
       for(int i=0;i<g.numVert;i++){ //n is the size of array a[]
          if(counter[i]==min_expect){
+            // if( S.find(V[i]) !=S.end() ){
             node = i;
+            // }
+            
          } 
       }
 
+      // printf("min element is node %d, with %f\n",node,min_expect);
 
       // for (j = G.begin(); j != G.end(); j++) {
       //    s=QueueS;
@@ -775,7 +785,7 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
       G.erase(node);
       S.insert(node);
       Q.push_back(node);
-      inf.push_back(min_expect*1.0/mc);
+      inf.push_back(min_expect*1.0/MCROUNDS);
 
 
       
@@ -785,16 +795,19 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
    }
 
    // vector<double> maxinf;
-   queue<int> myopic_select;
-   cout<<"sorted selected"<<endl;
-   for(long unsigned int i=0;i<Q.size();i++){
-      int node = Q[i];
+   // queue<int> myopic_select;
+   // for(long unsigned int i=0;i<Q.size();i++){
+   //    int node = Q[i];
       // cout<<Q[i]<<" ";
-      myopic_select.push(node);
+      // myopic_select.push(node);
       // cout <<"now we propogate adding node:" << i <<endl;
       // pair<double,int> influence = icExp(g, myopic_select, mc, epsilon);
       // inf.push_back(influence.first);
-      int* counter = icExp_lazyI(g, myopic_select, mc);
+
+      // if(model == "lt")
+      //    counter = ltExp(g, myopic_select, mc);
+      // if(model == "ic")
+      //    counter = icExp_lazyI(g, myopic_select, mc);
 
 
       // find GeoMean
@@ -809,19 +822,19 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
       // float med_expect = counter[g.numVert/2]*1.0/mc;
 
       // find min_probability
-      double min_expect = *min_element(counter+0, counter+g.numVert);
+      // double min_expect = *min_element(counter+0, counter+g.numVert);
       // if (i == Q.size()-1){
       //    cout<<min_expect<<endl;
       // }
 
-      min_expect = min_expect/mc;
+      // min_expect = min_expect/mc;
 
-      maxinf.push_back(min_expect);
+      // maxinf.push_back(min_expect);
       
-   }
+   // }
 
    
-   values res ={Q,maxinf,tim};
+   values res ={Q,inf,tim};
    // res.sed = ;
    // res.inf = maxinf;
    // res.time = times;
@@ -1236,7 +1249,7 @@ int* onehopReach(InfGraph g, bool* t, bool* S){
    return V;
 }
 
-values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
+values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
    bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
    bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
    clock_t start_t, end_t;
@@ -1244,6 +1257,7 @@ values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
    start_t = clock();
    // set<int> S;
 
+   int* counter = (int*)malloc(sizeof(int));
    vector<int> Q;
    vector<double> inf;
    vector<double>  tim;
@@ -1285,7 +1299,10 @@ values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
       //    }
       // }
 
-      int* counter = icExp_lazyI(g,s,MCROUNDS);
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
 
       while(!targets.empty()){
          targets.pop();
@@ -1304,13 +1321,16 @@ values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
             targetNum ++;
          }
       }
-      printf("round %d: there are %d nodes in target set\n",budget,targetNum);
+      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
    }
    queue<int> RR_selet;
    //  min_expect;
    for(int i=0;i<k;i++){
       RR_selet.push(Q[i]);
-      int* counter =icExp_lazyI(g,RR_selet,MCROUNDS);
+      if(model == "lt")
+         counter = ltExp(g, RR_selet, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, RR_selet, MCROUNDS);
       // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
       // for (int i =0;i<g.numVert;i++){
       //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
@@ -1319,7 +1339,7 @@ values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
       // cout << endl;
       double min_expect = *min_element(counter+0,counter+g.numVert);
       min_expect = min_expect*1.0/MCROUNDS;
-      // printf("%d rounds influence spread as: %f\n",i,min_expect);
+      printf("%d rounds influence spread as: %f\n",i,min_expect);
       inf.push_back(min_expect);
    }
    values res ={Q,inf,tim};

@@ -54,7 +54,7 @@ void logRec(Graph g, values res, inPut in, string method){
    outfile.close();
 
    std::ofstream myfile;
-    myfile.open ("log/"+in.dataset+"_"+method+".csv");
+    myfile.open ("log/"+in.MODEL+"_"+in.dataset+"_"+method+".csv");
     myfile << "k;seed;inf;tim\n";
     for(int i = 0;i<in.BUDGET;i++){
       if(i%10==0){

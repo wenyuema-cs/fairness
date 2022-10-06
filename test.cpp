@@ -7,7 +7,10 @@
 #include <omp.h>
 struct m10x1 {int v[10];};
 int A [] =       {84, 30, 95, 94, 36, 73, 52, 23, 2, 13};  
-struct m10x1 S = {(int*)malloc(sizeof(int)*10);};
+struct m10x1 S = {
+  x
+
+};
 int n,m=0;
 
 void print_m10x1(struct m10x1 x){

@@ -34,10 +34,11 @@ int main(int argc, char *argv[])
    string dataset =argv[5];
    int SAMPLE_ROUND = atoi(argv[6]);
    double ALPHA = atof(argv[7]);
+   string model = argv[8];
    int TEST = 10;
 
    //inPut in ={in.BUDGET =BUDGET,in.MCROUNDS= MCROUNDS, in.EPSILON = EPSILON,in.dataset = dataset, in.SAMPLE_ROUND= SAMPLE_ROUND};
-   inPut in ={.BUDGET =BUDGET,.MCROUNDS= MCROUNDS, .EPSILON = EPSILON,.dataset = dataset, .SAMPLE_ROUND= SAMPLE_ROUND, .ALPHA = ALPHA};
+   inPut in ={.BUDGET =BUDGET,.MCROUNDS= MCROUNDS, .EPSILON = EPSILON,.dataset = dataset, .SAMPLE_ROUND= SAMPLE_ROUND, .ALPHA = ALPHA, .MODEL = model};
    cout<<"method: "<<method<<" "<<endl;
    cout<<"BUDGET: "<<BUDGET<<" "<<MCROUNDS<<" " <<EPSILON <<" "<< dataset<<" "  <<SAMPLE_ROUND<<" " <<endl;
 
@@ -84,7 +85,7 @@ int main(int argc, char *argv[])
       }
 
       if(method.compare("sRR")==0){
-         res = rSelect(g , BUDGET,MCROUNDS, EPSILON);
+         res = rSelect(g , BUDGET,MCROUNDS, EPSILON, in.MODEL);
       }
       if(method.compare("pRR")==0){
          res = rpSelect(g , BUDGET,MCROUNDS, EPSILON);
@@ -113,7 +114,7 @@ int main(int argc, char *argv[])
       }   
       
       if(method.compare("myopic")==0){
-         res = myOpic(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+         res = myOpic(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
          // res = myOpic_trick(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
          // res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
          // logRec(g, res, in, method);
