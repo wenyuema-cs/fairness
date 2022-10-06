@@ -255,314 +255,6 @@ set<int> oneHop(Graph g, set<int> S){
 }
 
 
-int* reachTar(InfGraph g, bool* t, bool* S){
-   
-   // queue<int> s;
-   int *V = (int*)malloc(sizeof(int)*g.numVert);
-   int *counter = (int*)malloc(sizeof(int)*g.numVert);
-
-   for(int i=0;i<g.numVert;i++){
-
-      counter[i] =0;
-   //    if(S[i]==true){
-   //       s.push(i);
-   //    }
-   }
-
-   for(int node =0; node<g.numVert; node++){
-      
-      if(t[node] ==true){
-         counter[node]++;
-         for(long unsigned int w=0; w < g.pre[node].size(); w++){
-
-            if(S[node] == false){
-               counter[g.pre[node][w]]++;
-            }
-
-         }
-      }
-      else{
-         continue;
-      }
-
-   }
-   /*
-   cout<<"what is inside couter:"<<endl;
-   for(int i = 0;i<g.numVert;i++){
-      cout<<counter[i]<<" ";
-   }
-   cout<<endl;
-   */
-   for (int i =0;i<g.numVert;i++){
-      V[i] = i;
-   }
-
-   // sorted by max->min 
-   sort( V,V+g.numVert, [&](int i,int j){return counter[j]<counter[i];} );
-   /**/
-   // cout<<"V after sorted:"<<endl;
-   // for (int i =0;i<g.numVert;i++){
-   //    cout<<V[i]<<" ";
-   // }
-   // cout<<endl;
-   
-   return V;
-}
-
-values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
-   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
-   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
-   clock_t start_t, end_t;
-   double duration;
-   start_t = clock();
-   // set<int> S;
-
-   vector<int> Q;
-   vector<double> inf;
-   vector<double>  tim;
-   queue<int> targets,s;
-
-   for(int i = 0; i<g.numVert;i++){
-      // targets.push(i);
-      S[i] = false;
-      T[i] = true;
-   }
-
-   for(int budget = 0; budget<k; budget++){
-      int reachNum = 0;
-      int targetNum = 0;
-      int* V  = reachTar(g, T, S);
-      
-      for(int i=0;i<g.numVert;i++){
-         if(V[i]>0){
-            reachNum++;
-         }
-      }
-      // printf("round %d: there are %d nodes in reachable set\n",budget,reachNum);
-      int node;
-      for (int i=0;i<g.numVert;i++){
-         if(S[V[i]]==true){
-            continue;
-         }
-         else{
-            node = V[i];
-            // printf("node %d can be selected\n",node);
-            break;
-         }
-      }
-      
-      S[node] = true;
-      s.push(node);
-      Q.push_back(node);
-      end_t = clock();
-      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
-      tim.push_back(duration);
-
-      // for(int i=0;i<g.numVert;i++){
-      //    if(S[i]==true){
-      //       s.push(i);
-      //    }
-      // }
-
-      int* counter = icExp_lazyI(g,s,MCROUNDS);
-
-      while(!targets.empty()){
-         targets.pop();
-      }
-      for(int i=0; i<g.numVert;i++){
-         T[i]=false;
-      }
-      targetNum = 0;
-
-      int min_expect = *min_element(counter+0, counter+g.numVert);
-
-      // int select;
-      for(int i=0; i<g.numVert;i++){
-         if(counter[i]<= min_expect+EPSILON){
-            T[i]=true;
-            targetNum ++;
-         }
-      }
-      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
-   }
-   queue<int> RR_selet;
-   //  min_expect;
-   for(int i=0;i<k;i++){
-      RR_selet.push(Q[i]);
-      int* counter =icExp_lazyI(g,RR_selet,MCROUNDS);
-      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
-      // for (int i =0;i<g.numVert;i++){
-      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
-      //    cout<<counter[i]<<" ";
-      // }
-      // cout << endl;
-      double min_expect = *min_element(counter+0,counter+g.numVert);
-      min_expect = min_expect*1.0/MCROUNDS;
-      // printf("%d rounds influence spread as: %f\n",i,min_expect);
-      inf.push_back(min_expect);
-   }
-   values res ={Q,inf,tim};
-   return res;
-}
-
-int* reachprobTar(InfGraph g, bool* t, bool* S){
-   
-   // queue<int> s;
-   int wholePro =0;
-   int *V = (int*)malloc(sizeof(int)*g.numVert);
-   int *counter = (int*)malloc(sizeof(int)*g.numVert);
-   double *probC = (double*)malloc(sizeof(double)*g.numVert);
-
-   for(int i=0;i<g.numVert;i++){
-
-      counter[i] =0;
-   //    if(S[i]==true){
-   //       s.push(i);
-   //    }
-   }
-
-   for(int node =0; node<g.numVert; node++){
-      
-      if(t[node] ==true){
-         counter[node]++;
-         wholePro++;
-         for(long unsigned int w=0; w < g.pre[node].size(); w++){
-
-            if(S[node] == false){
-               counter[g.pre[node][w]]++;
-               wholePro++;
-            }
-
-
-         }
-      }
-      else{
-         continue;
-      }
-
-   }
-   double prob;
-   // (1-p(u,s))*C(u,s))
-   for(int i = 0;i<g.numVert;i++){
-      prob = counter[i]*1.0/wholePro;
-      probC[i] = (1-prob)*counter[i];
-   }
-
-   free(counter);
-   
-   for (int i =0;i<g.numVert;i++){
-      V[i] = i;
-   }
-
-   // sorted by max->min 
-   sort( V,V+g.numVert, [&](int i,int j){return probC[j]<probC[i];} );
-   /**/
-   // cout<<"V after sorted:"<<endl;
-   // for (int i =0;i<g.numVert;i++){
-   //    cout<<V[i]<<" ";
-   // }
-   // cout<<endl;
-   
-   return V;
-}
-
-
-values rpSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
-   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
-   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
-   clock_t start_t, end_t;
-   double duration;
-   start_t = clock();
-   // set<int> S;
-
-   vector<int> Q;
-   vector<double> inf;
-   vector<double>  tim;
-   queue<int> targets,s;
-
-   for(int i = 0; i<g.numVert;i++){
-      // targets.push(i);
-      S[i] = false;
-      T[i] = true;
-   }
-
-   for(int budget = 0; budget<k; budget++){
-      int reachNum = 0;
-      int targetNum = 0;
-      int* V  = reachprobTar(g, T, S);
-      
-      for(int i=0;i<g.numVert;i++){
-         if(V[i]>0){
-            reachNum++;
-         }
-      }
-      // printf("round %d: there are %d nodes in reachable set\n",budget,reachNum);
-      int node;
-      for (int i=0;i<g.numVert;i++){
-         if(S[V[i]]==true){
-            continue;
-         }
-         else{
-            node = V[i];
-            // printf("node %d can be selected\n",node);
-            break;
-         }
-      }
-      
-      S[node] = true;
-      s.push(node);
-      Q.push_back(node);
-      end_t = clock();
-      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
-      tim.push_back(duration);
-
-      // for(int i=0;i<g.numVert;i++){
-      //    if(S[i]==true){
-      //       s.push(i);
-      //    }
-      // }
-
-      int* counter = icExp_lazyI(g,s,MCROUNDS);
-
-      while(!targets.empty()){
-         targets.pop();
-      }
-      for(int i=0; i<g.numVert;i++){
-         T[i]=false;
-      }
-      targetNum = 0;
-
-      int min_expect = *min_element(counter+0, counter+g.numVert);
-
-      // int select;
-      for(int i=0; i<g.numVert;i++){
-         if(counter[i]<= min_expect+EPSILON){
-            T[i]=true;
-            targetNum ++;
-         }
-      }
-      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
-   }
-   queue<int> RR_selet;
-   //  min_expect;
-   for(int i=0;i<k;i++){
-      RR_selet.push(Q[i]);
-      int* counter =icExp_lazyI(g,RR_selet,MCROUNDS);
-      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
-      // for (int i =0;i<g.numVert;i++){
-      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
-      //    cout<<counter[i]<<" ";
-      // }
-      // cout << endl;
-      double min_expect = *min_element(counter+0,counter+g.numVert);
-      min_expect = min_expect*1.0/MCROUNDS;
-      // printf("%d rounds influence spread as: %f\n",i,min_expect);
-      inf.push_back(min_expect);
-   }
-   values res ={Q,inf,tim};
-   return res;
-}
-
 
 values lazyGreedy(Graph g, int k, int mc, double epsilon, double alpha){
    clock_t start_t, end_t;
@@ -1053,7 +745,7 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
          QueueS.push(*i);
       }
       
-      float* counter = icExp_lazy(g, QueueS, mc);
+      int* counter = icExp_lazyI(g, QueueS, mc);
       double min_expect = *min_element(counter+0, counter+g.numVert);
       for(int i=0;i<g.numVert;i++){ //n is the size of array a[]
          if(counter[i]==min_expect){
@@ -1102,7 +794,7 @@ values myOpic(InfGraph g, int k, int mc, double epsilon){
       // cout <<"now we propogate adding node:" << i <<endl;
       // pair<double,int> influence = icExp(g, myopic_select, mc, epsilon);
       // inf.push_back(influence.first);
-      float* counter = icExp_lazy(g, myopic_select, mc);
+      int* counter = icExp_lazyI(g, myopic_select, mc);
 
 
       // find GeoMean
@@ -1248,6 +940,8 @@ values myOpic_hyper(InfGraph g, int k, int mc){
    //return make_pair(S,maxinf);   
 }
 
+
+
 int* RSet(Graph g, queue<int> t, set<int> s){
    // cout<<"in Rset"<<endl;
    
@@ -1278,7 +972,7 @@ int* RSet(Graph g, queue<int> t, set<int> s){
          Q.pop();
          B.push_back(candi);
          for(long unsigned int neighbor = 0; neighbor<g.pre[candi].size();neighbor++){
-
+            // no initialize? why it workds???
             if( (g.act[g.pre[candi][neighbor]] == 0) && ( Qset.find(candi) !=Qset.end() )){
                g.act[g.pre[candi][neighbor]] = 1;
                Q.push(g.pre[candi][neighbor]);
@@ -1301,7 +995,6 @@ int* RSet(Graph g, queue<int> t, set<int> s){
    //    cout<<counter[i]<<" ";
    // }
    // cout<<endl;
-
    for (int i =0;i<g.numVert;i++){
       V[i] = i;
    }
@@ -1309,123 +1002,643 @@ int* RSet(Graph g, queue<int> t, set<int> s){
    // sorted by max->min 
    sort( V,V+g.numVert, [&](int i,int j){return counter[j]<counter[i];} );
    
-   // cout<<"----------------------"<<endl;
-   // cout<<"V after sorted:"<<endl;
+   // int reachNum = 0;
+   // // cout<<"----------------------"<<endl;
+   // // cout<<"V after sorted:"<<endl;
    // for (int i =0;i<g.numVert;i++){
-   //    cout<<V[i]<<"("<<counter[V[i]]<<") ";
+   //    if(counter[i]>0){
+   //       reachNum++;
+   //    }
+   //    // cout<<V[i]<<"("<<counter[V[i]]<<") ";
    // }
-   // cout<<endl;
+   // // cout<<endl;
+   // printf("there are %d nodes in reachable set",reachNum);
+   
+   free(counter);
+
    return V;
 }
 
-values rrSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
+int* bsfReach(Graph g, bool* t, bool*s){
+   // queue<int> s;
+   int *V = (int*)malloc(sizeof(int)*g.numVert);
+   int *counter = (int*)malloc(sizeof(int)*g.numVert);
+   bool *spread = (bool*)malloc(sizeof(bool)*g.numVert);
+   queue<int> oneSpread;
+
+   for(int i=0;i<g.numVert;i++){
+      V[i] = 0;
+      counter[i] = 0;
+   }
+
    
+   for (int i=0;i<g.numVert;i++)
+   {
+      if(t[i] == true){
+         oneSpread.push(i);
+         for(int j=0;j<g.numVert;j++){
+            spread[j] = false;
+         }
+         while(!oneSpread.empty()){
+            int node = oneSpread.front();
+            oneSpread.pop();
+            for(int w = 0; w<g.pre[node].size();w++){
+
+               // counter one spread without repeating
+               if((spread[w] == false) && (s[i] == false )){
+                  spread[w] =true;
+                  counter[w]++;
+                  oneSpread.push(w);
+               }
+            }
+         }
+      }
+      else{
+         continue;
+      }
+      
+
+   }
+
+   for (int i =0;i<g.numVert;i++){
+      V[i] = i;
+   }
+
+   // sorted by max->min 
+   sort( V,V+g.numVert, [&](int i,int j){return counter[j]<counter[i];} );
+   /**/
+   // int reachNum = 0;
+   // for(int i=0;i<g.numVert;i++){
+   //    if(counter[i]>0){
+   //       reachNum++;
+   //    }
+   // }
+   // printf("there are %d nodes in reachable set\n",reachNum);
+   
+   return V;
+   
+
+
+}
+
+values rbfsSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
    clock_t start_t, end_t;
    double duration;
    start_t = clock();
-   vector<double> tim;
-   set<int> S;
-   queue<int> Sque;
-   queue<int> T;
+   // set<int> S;
+
    vector<int> Q;
+   vector<double> inf;
+   vector<double>  tim;
+   queue<int> targets,s;
 
    for(int i = 0; i<g.numVert;i++){
-      T.push(i);
+      // targets.push(i);
+      S[i] = false;
+      T[i] = true;
    }
 
-   for(int j = 0; j<k; j++){
-
-      int reachNum = 0;
+   for(int budget = 0; budget<k; budget++){
       int targetNum = 0;
-      // cout<<"trying to do rrSelection here"<<endl;
-      int* V = RSet(g, T, S);
+      int* V  = bsfReach(g, T, S);
+
       int node;
-      // cout<<"what's wrong here????????"<<endl;
-      // printf("%d\n",g.numVert);
-      for(int i =0;i<g.numVert;i++){
-         // printf("%d %d\n",i,V[i]);
-         if( S.find(V[i]) !=S.end() ){
-            // printf("node %d is here", V[i]);
+      for (int i=0;i<g.numVert;i++){
+         if(S[V[i]]==true){
             continue;
          }
          else{
             node = V[i];
-            // printf("choosing nodes %d here",node);
+            printf("node %d can be selected\n",node);
             break;
          }
       }
       
-      for(int i = 0;i<g.numVert;i++){
-         if(V[i]>0){
-            reachNum++;
-         }
-      }
-      printf("round %d: there are %d nodes in reachable set\n",j,reachNum);
-      S.insert(node);
+      S[node] = true;
+      s.push(node);
       Q.push_back(node);
-      for(const auto& i: S){
-         Sque.push(i);
-      }
-      float* counter = icExp_lazy(g, Sque, MCROUNDS);
+      end_t = clock();
+      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
 
-      while(!T.empty()){
-         T.pop();
-      } 
-      
-      double min_expect = *min_element(counter+0, counter+g.numVert);
-      //cout << "min expected is "<<min_expect<<" in set" <<endl;
-      // printf("node that been seleceted \n");
-      // cout<< typeid(counter[0]).name()<< counter[0] <<" ";
-      int select;
-      for(int i = 0; i<g.numVert; i++){
-         if(counter[i] <= min_expect + EPSILON){
-            select = i;
-            // cout<< typeid(counter[i]).name() <<" "<< counter[i]<< " "<< typeid(select).name()<< select<<endl;
-            T.push(select);
-            targetNum++;
+      // cout<<"node selected by far";
+      // for(int i=0;i<g.numVert;i++){
+      //    if(S[i]==true){
+      //       cout<<i<<" ";
+      //    }
+      // }
+      // cout<<endl;
+
+      int* counter = icExp_lazyI(g,s,MCROUNDS);
+
+      while(!targets.empty()){
+         targets.pop();
+      }
+      for(int i=0; i<g.numVert;i++){
+         T[i]=false;
+      }
+      targetNum = 0;
+
+      int min_expect = *min_element(counter+0, counter+g.numVert);
+
+      // int select;
+      for(int i=0; i<g.numVert;i++){
+         if(counter[i]<= min_expect+EPSILON){
+            T[i]=true;
+            targetNum ++;
          }
       }
-      printf("round %d: there are %d nodes in target set\n",j,targetNum);
-      end_t = clock();
-      duration = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-      tim.push_back(duration);
-   
+      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
    }
-
-   vector<double> inf;
-   queue<int> RR_select;
-   // cout<<"sorted selected"<<endl;
+   queue<int> RR_selet;
+   //  min_expect;
    for(int i=0;i<k;i++){
-      // cout<<Q[i]<<" ";
-      RR_select.push(Q[i]);
-      // cout <<"now we propogate adding node:" << i <<endl;
-      float* counter = icExp_lazy(g, RR_select, MCROUNDS);
-
-      // find GeoMean
-      // for(int m =0;m<g.numVert;m++){
-      //    counter[m] = counter[m]*1.0/MCROUNDS;
+      RR_selet.push(Q[i]);
+      int* counter =icExp_lazyI(g,RR_selet,MCROUNDS);
+      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
+      // for (int i =0;i<g.numVert;i++){
+      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
+      //    cout<<counter[i]<<" ";
       // }
-      // float mean_expect = geoMean(counter,g.numVert);
-
-      // find Median
-      // Median(counter,0,g.numVert-1);
-      // float med_expect = counter[g.numVert/2]*1.0/MCROUNDS;
-
-      //find minimial
-      double min_expect = *min_element(counter+0, counter+g.numVert);
-      // cout<< "min_expect in budget "<<i<<": "<<min_expect <<endl;
+      // cout << endl;
+      double min_expect = *min_element(counter+0,counter+g.numVert);
       min_expect = min_expect*1.0/MCROUNDS;
+      // printf("%d rounds influence spread as: %f\n",i,min_expect);
       inf.push_back(min_expect);
-      // pair<double,int> influence = icExp(g, RR_select, MCROUNDS, EPSILON);
-      // double mininf = influence.first;
-      // inf.push_back(mininf);
    }
+   values res ={Q,inf,tim};
+   return res;
+}
+
+
+
+int* onehopReach(InfGraph g, bool* t, bool* S){
+   
+   // queue<int> s;
+   int *V = (int*)malloc(sizeof(int)*g.numVert);
+   int *counter = (int*)malloc(sizeof(int)*g.numVert);
+
+   for(int i=0;i<g.numVert;i++){
+
+      counter[i] =0;
+   //    if(S[i]==true){
+   //       s.push(i);
+   //    }
+   }
+
+   for(int node =0; node<g.numVert; node++){
+      
+      if(t[node] ==true){
+         counter[node]++;
+         for(long unsigned int w=0; w < g.pre[node].size(); w++){
+
+            if(S[node] == false){
+               counter[g.pre[node][w]]++;
+            }
+
+         }
+      }
+      else{
+         continue;
+      }
+
+   }
+   /*
+   cout<<"what is inside couter:"<<endl;
+   for(int i = 0;i<g.numVert;i++){
+      cout<<counter[i]<<" ";
+   }
+   cout<<endl;
+   */
+   for (int i =0;i<g.numVert;i++){
+      V[i] = i;
+   }
+
+   // sorted by max->min 
+   sort( V,V+g.numVert, [&](int i,int j){return counter[j]<counter[i];} );
+   /**/
+
+   // int reachNum = 0;
+   // for(int i=0;i<g.numVert;i++){
+   //    if(counter[i]>0){
+   //       reachNum++;
+   //    }
+   // }
+   // printf("there are %d nodes in reachable set\n",reachNum);
+   // cout<<"V after sorted:"<<endl;
+   // for (int i =0;i<g.numVert;i++){
+   //    cout<<V[i]<<" ";
+   // }
    // cout<<endl;
    
-   values res ={Q,inf,tim};
-   return res;   
-
+   return V;
 }
+
+values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+   // set<int> S;
+
+   vector<int> Q;
+   vector<double> inf;
+   vector<double>  tim;
+   queue<int> targets,s;
+
+   for(int i = 0; i<g.numVert;i++){
+      // targets.push(i);
+      S[i] = false;
+      T[i] = true;
+   }
+
+   for(int budget = 0; budget<k; budget++){
+      int targetNum = 0;
+      int* V  = onehopReach(g, T, S);
+      
+
+      int node;
+      for (int i=0;i<g.numVert;i++){
+         if(S[V[i]]==true){
+            continue;
+         }
+         else{
+            node = V[i];
+            // printf("node %d can be selected\n",node);
+            break;
+         }
+      }
+      
+      S[node] = true;
+      s.push(node);
+      Q.push_back(node);
+      end_t = clock();
+      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
+
+      // for(int i=0;i<g.numVert;i++){
+      //    if(S[i]==true){
+      //       s.push(i);
+      //    }
+      // }
+
+      int* counter = icExp_lazyI(g,s,MCROUNDS);
+
+      while(!targets.empty()){
+         targets.pop();
+      }
+      for(int i=0; i<g.numVert;i++){
+         T[i]=false;
+      }
+      targetNum = 0;
+
+      int min_expect = *min_element(counter+0, counter+g.numVert);
+
+      // int select;
+      for(int i=0; i<g.numVert;i++){
+         if(counter[i]<= min_expect+EPSILON){
+            T[i]=true;
+            targetNum ++;
+         }
+      }
+      printf("round %d: there are %d nodes in target set\n",budget,targetNum);
+   }
+   queue<int> RR_selet;
+   //  min_expect;
+   for(int i=0;i<k;i++){
+      RR_selet.push(Q[i]);
+      int* counter =icExp_lazyI(g,RR_selet,MCROUNDS);
+      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
+      // for (int i =0;i<g.numVert;i++){
+      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
+      //    cout<<counter[i]<<" ";
+      // }
+      // cout << endl;
+      double min_expect = *min_element(counter+0,counter+g.numVert);
+      min_expect = min_expect*1.0/MCROUNDS;
+      // printf("%d rounds influence spread as: %f\n",i,min_expect);
+      inf.push_back(min_expect);
+   }
+   values res ={Q,inf,tim};
+   return res;
+}
+
+
+int* tieReach(InfGraph g, bool* t, bool* S,double *probC){
+   
+   // queue<int> s;
+   int wholePro =0;
+   int *V = (int*)malloc(sizeof(int)*g.numVert);
+   int *counter = (int*)malloc(sizeof(int)*g.numVert);
+   // double *probC = (double*)malloc(sizeof(double)*g.numVert);
+
+   for(int i=0;i<g.numVert;i++){
+
+      counter[i] =0;
+   //    if(S[i]==true){
+   //       s.push(i);
+   //    }
+   }
+
+   for(int node =0; node<g.numVert; node++){
+      
+      if(t[node] ==true){
+         counter[node]++;
+         // wholePro++;
+         for(long unsigned int w=0; w < g.pre[node].size(); w++){
+
+            if(S[node] == false){
+               counter[g.pre[node][w]]++;
+               // wholePro++;
+            }
+
+
+         }
+      }
+      else{
+         continue;
+      }
+
+   }
+
+   
+   for (int i =0;i<g.numVert;i++){
+      V[i] = i;
+   }
+
+   // sorted by max->min 
+   // tie should change from min-max!!
+   sort( V,V+g.numVert, [&](int i,int j){return (counter[j]<counter[i]) || (counter[j]<counter[i]) && (probC[i]<probC[j]);} );
+   // /**/
+   // int reachNum = 0;
+   // for(int i=0;i<g.numVert;i++){
+   //    if(counter[i]>0){
+   //       reachNum++;
+   //    }
+   // }
+   // printf("there are %d nodes in reachable set\n",reachNum);
+   free(counter);
+   return V;
+}
+
+values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+
+   // record p(u,s)
+   double *probC = (double*)malloc(sizeof(double)*g.numVert);
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+   // set<int> S;
+
+   vector<int> Q;
+   vector<double> inf;
+   vector<double>  tim;
+   queue<int> targets,s;
+
+   for(int i = 0; i<g.numVert;i++){
+      // targets.push(i);
+      S[i] = false;
+      T[i] = true;
+      probC[i] = 0;
+   }
+
+   for(int budget = 0; budget<k; budget++){
+      int targetNum = 0;
+      int* V  = tieReach(g, T, S, probC);
+      // free(probC)
+      
+
+      int node;
+      for (int i=0;i<g.numVert;i++){
+         if(S[V[i]]==true){
+            continue;
+         }
+         else{
+            node = V[i];
+            // printf("node %d can be selected\n",node);
+            break;
+         }
+      }
+      
+      S[node] = true;
+      s.push(node);
+      Q.push_back(node);
+      end_t = clock();
+      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
+
+      // for(int i=0;i<g.numVert;i++){
+      //    if(S[i]==true){
+      //       s.push(i);
+      //    }
+      // }
+      int wholeProb = 0;
+      int* counter = icExp_lazyI(g,s,MCROUNDS);
+
+      while(!targets.empty()){
+         targets.pop();
+      }
+      for(int i=0; i<g.numVert;i++){
+         T[i]=false;
+         wholeProb += counter[i];
+      }
+      targetNum = 0;
+
+      int min_expect = *min_element(counter+0, counter+g.numVert);
+
+      // int select;
+      for(int i=0; i<g.numVert;i++){
+         probC[i] = counter[i]*1.0/wholeProb;
+         if(counter[i]<= min_expect+EPSILON){
+            T[i]=true;
+            targetNum ++;
+         }
+      }
+      printf("round %d: there are %d nodes in target set\n",budget,targetNum);
+   }
+   queue<int> RR_selet;
+   //  min_expect;
+   for(int i=0;i<k;i++){
+      RR_selet.push(Q[i]);
+      int* counter =icExp_lazyI(g,RR_selet,MCROUNDS);
+      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
+      // for (int i =0;i<g.numVert;i++){
+      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
+      //    cout<<counter[i]<<" ";
+      // }
+      // cout << endl;
+      double min_expect = *min_element(counter+0,counter+g.numVert);
+      min_expect = min_expect*1.0/MCROUNDS;
+      // printf("%d rounds influence spread as: %f\n",i,min_expect);
+      inf.push_back(min_expect);
+   }
+   values res ={Q,inf,tim};
+   return res;
+}
+
+
+int* probReach(InfGraph g, bool* t, bool* S){
+   
+   // queue<int> s;
+   int wholePro =0;
+   int *V = (int*)malloc(sizeof(int)*g.numVert);
+   int *counter = (int*)malloc(sizeof(int)*g.numVert);
+   double *probC = (double*)malloc(sizeof(double)*g.numVert);
+
+   for(int i=0;i<g.numVert;i++){
+
+      counter[i] =0;
+      probC[i]=0;
+   //    if(S[i]==true){
+   //       s.push(i);
+   //    }
+   }
+
+   for(int node =0; node<g.numVert; node++){
+      
+      if(t[node] ==true){
+         counter[node]++;
+         wholePro++;
+         for(long unsigned int w=0; w < g.pre[node].size(); w++){
+
+            if(S[node] == false){
+               counter[g.pre[node][w]]++;
+               wholePro++;
+            }
+
+
+         }
+      }
+      else{
+         continue;
+      }
+
+   }
+   double prob;
+   // (1-p(u,s))*C(u,s))
+   for(int i = 0;i<g.numVert;i++){
+      prob = counter[i]*1.0/wholePro;
+      probC[i] = (1-prob)*counter[i];
+   }
+
+
+   
+   for (int i =0;i<g.numVert;i++){
+      V[i] = i;
+   }
+
+   // sorted by max->min 
+   sort( V,V+g.numVert, [&](int i,int j){return probC[j]<probC[i];} );
+   /**/
+
+   // int reachNum = 0;
+   // for(int i=0;i<g.numVert;i++){
+   //    if(counter[i]>0){
+   //       reachNum++;
+   //    }
+   // }
+   // printf("there are %d nodes in reachable set\n",reachNum);
+   free(counter);
+   return V;
+}
+
+
+values rpSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+   // set<int> S;
+
+   vector<int> Q;
+   vector<double> inf;
+   vector<double>  tim;
+   queue<int> targets,s;
+
+   for(int i = 0; i<g.numVert;i++){
+      // targets.push(i);
+      S[i] = false;
+      T[i] = true;
+   }
+
+   for(int budget = 0; budget<k; budget++){
+      int reachNum = 0;
+      int targetNum = 0;
+      int* V  = probReach(g, T, S);
+      
+      // printf("round %d: there are %d nodes in reachable set\n",budget,reachNum);
+      int node;
+      for (int i=0;i<g.numVert;i++){
+         if(S[V[i]]==true){
+            continue;
+         }
+         else{
+            node = V[i];
+            // printf("node %d can be selected\n",node);
+            break;
+         }
+      }
+      
+      S[node] = true;
+      s.push(node);
+      Q.push_back(node);
+      end_t = clock();
+      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
+
+      // for(int i=0;i<g.numVert;i++){
+      //    if(S[i]==true){
+      //       s.push(i);
+      //    }
+      // }
+
+      int* counter = icExp_lazyI(g,s,MCROUNDS);
+
+      while(!targets.empty()){
+         targets.pop();
+      }
+      for(int i=0; i<g.numVert;i++){
+         T[i]=false;
+      }
+      targetNum = 0;
+
+      int min_expect = *min_element(counter+0, counter+g.numVert);
+
+      // int select;
+      for(int i=0; i<g.numVert;i++){
+         if(counter[i]<= min_expect+EPSILON){
+            T[i]=true;
+            targetNum ++;
+         }
+      }
+      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
+   }
+   queue<int> RR_selet;
+   //  min_expect;
+   for(int i=0;i<k;i++){
+      RR_selet.push(Q[i]);
+      int* counter =icExp_lazyI(g,RR_selet,MCROUNDS);
+      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
+      // for (int i =0;i<g.numVert;i++){
+      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
+      //    cout<<counter[i]<<" ";
+      // }
+      // cout << endl;
+      double min_expect = *min_element(counter+0,counter+g.numVert);
+      min_expect = min_expect*1.0/MCROUNDS;
+      // printf("%d rounds influence spread as: %f\n",i,min_expect);
+      inf.push_back(min_expect);
+   }
+   values res ={Q,inf,tim};
+   return res;
+}
+
 
 values rrSelect_hyper(InfGraph g, int k, int MCROUNDS, double EPSILON){
    
@@ -1676,6 +1889,7 @@ values rrSelect_mysel_hyper(InfGraph g, int k, int MCROUNDS, double EPSILON){
 
 
 values super(InfGraph g, int k, int mc, double epsilon){
+
    clock_t start_t, end_t;
    double duration;
    start_t = clock();
@@ -1766,9 +1980,9 @@ values super(InfGraph g, int k, int mc, double epsilon){
       int RR_select =0;
       queue<int> my_s;
       queue<int> RR_s;
-      my_s = s;
-      my_s.push(RR_node);
-      counter = icExp_lazyI(g,my_s,mc);
+      RR_s = s;
+      RR_s.push(RR_node);
+      counter = icExp_lazyI(g,RR_s,mc);
       int RR_expect = *min_element(counter+0,counter+g.numVert);
 
       for(int i=0; i<g.numVert;i++){
@@ -1789,7 +2003,7 @@ values super(InfGraph g, int k, int mc, double epsilon){
       // if myopic find repeat node as previous round, use RR selected node.
       if(my_pre == my_node){
          // node = -1;
-         // cout<<"using RR's set: ";
+         printf("round %d using RR's set\n",j);
          // cout<<"pick node "<<RR_node<<endl;
          s.push(RR_node);
          Q.push_back(RR_node);  
@@ -1802,7 +2016,8 @@ values super(InfGraph g, int k, int mc, double epsilon){
       else{
          RR_s = s;
          RR_s.push(my_node);
-         counter = icExp_lazyI(g,s,mc);
+         //???
+         counter = icExp_lazyI(g,RR_s,mc);
          my_expect = *min_element(counter+0,counter+g.numVert);
          for(int i=0;i<g.numVert;i++){
             if(counter[i]<=my_expect+epsilon*mc){
@@ -1816,7 +2031,7 @@ values super(InfGraph g, int k, int mc, double epsilon){
       // printf("myopic selection is %d, RR selection is %d ", my_node,RR_node);
 
       if(my_expect>RR_expect){
-         cout<<"using myopic's set: ";
+         // printf("round %d using myopic's set\n",j);
          // cout<<"pick node "<<my_node<<endl;
          s.push(my_node);
          Q.push_back(my_node); 
@@ -1838,7 +2053,7 @@ values super(InfGraph g, int k, int mc, double epsilon){
             // break;
          }
          else{
-            // cout<<"using RR's set: ";
+            printf("round %d using RR's set\n",j);
             // cout<<"pick node "<<RR_node<<endl;
             s.push(RR_node);
             Q.push_back(RR_node);  
@@ -1848,11 +2063,498 @@ values super(InfGraph g, int k, int mc, double epsilon){
          }
       }
       else{
-         // cout<<"using RR's set: ";
+         printf("round %d using RR's set\n",j);
          // cout<<"pick node "<<RR_node<<endl;
          s.push(RR_node);
          Q.push_back(RR_node); 
          S.insert(RR_node);
+         maxinf.push_back(RR_expect*1.0/mc);
+         RRselectCount++;
+      }
+      // break;
+
+      end_t = clock();
+      duration = (double)(end_t-start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
+
+   }
+   values res ={Q,maxinf,tim};
+   // res.sed = ;
+   // res.inf = maxinf;
+   // res.time = times;
+   printf("Myopic using %d times, RR using %d times\n",myselectCount,RRselectCount);
+   return res;
+
+}
+values rrSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
+   
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+   vector<double> tim;
+   set<int> S;
+   queue<int> Sque;
+   queue<int> T;
+   vector<int> Q;
+
+   for(int i = 0; i<g.numVert;i++){
+      T.push(i);
+   }
+
+   for(int j = 0; j<k; j++){
+
+      int targetNum = 0;
+      // cout<<"trying to do rrSelection here"<<endl;
+      int* V = RSet(g, T, S);
+      int node;
+      // cout<<"what's wrong here????????"<<endl;
+      // printf("%d\n",g.numVert);
+      for(int i =0;i<g.numVert;i++){
+         // printf("%d %d\n",i,V[i]);
+         if( S.find(V[i]) !=S.end() ){
+            // printf("node %d is here", V[i]);
+            continue;
+         }
+         else{
+            node = V[i];
+            // printf("choosing nodes %d here",node);
+            break;
+         }
+      }
+      
+      // printf("round %d: there are %d nodes in reachable set\n",j,reachNum);
+      S.insert(node);
+      Q.push_back(node);
+      for(const auto& i: S){
+         Sque.push(i);
+      }
+      float* counter = icExp_lazy(g, Sque, MCROUNDS);
+
+      while(!T.empty()){
+         T.pop();
+      } 
+      
+      double min_expect = *min_element(counter+0, counter+g.numVert);
+      //cout << "min expected is "<<min_expect<<" in set" <<endl;
+      // printf("node that been seleceted \n");
+      // cout<< typeid(counter[0]).name()<< counter[0] <<" ";
+      int select;
+      for(int i = 0; i<g.numVert; i++){
+         if(counter[i] <= min_expect + EPSILON){
+            select = i;
+            // cout<< typeid(counter[i]).name() <<" "<< counter[i]<< " "<< typeid(select).name()<< select<<endl;
+            T.push(select);
+            targetNum++;
+         }
+      }
+      // printf("round %d: there are %d nodes in target set\n",j,targetNum);
+      end_t = clock();
+      duration = (double)(end_t - start_t) / CLOCKS_PER_SEC;
+      tim.push_back(duration);
+   
+   }
+
+   vector<double> inf;
+   queue<int> RR_select;
+   // cout<<"sorted selected"<<endl;
+   for(int i=0;i<k;i++){
+      // cout<<Q[i]<<" ";
+      RR_select.push(Q[i]);
+      // cout <<"now we propogate adding node:" << i <<endl;
+      float* counter = icExp_lazy(g, RR_select, MCROUNDS);
+
+      // find GeoMean
+      // for(int m =0;m<g.numVert;m++){
+      //    counter[m] = counter[m]*1.0/MCROUNDS;
+      // }
+      // float mean_expect = geoMean(counter,g.numVert);
+
+      // find Median
+      // Median(counter,0,g.numVert-1);
+      // float med_expect = counter[g.numVert/2]*1.0/MCROUNDS;
+
+      //find minimial
+      double min_expect = *min_element(counter+0, counter+g.numVert);
+      // cout<< "min_expect in budget "<<i<<": "<<min_expect <<endl;
+      min_expect = min_expect*1.0/MCROUNDS;
+      inf.push_back(min_expect);
+      // pair<double,int> influence = icExp(g, RR_select, MCROUNDS, EPSILON);
+      // double mininf = influence.first;
+      // inf.push_back(mininf);
+   }
+   // cout<<endl;
+   
+   values res ={Q,inf,tim};
+   return res;   
+
+}
+
+/**/
+values sSuper(InfGraph g, int k, int mc, double epsilon){
+
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+   set<int> G;
+   vector<double> inf;
+   vector<int> Q;
+   vector<double> maxinf, tim;
+   queue<int> s;
+
+
+   for(int i = 0; i<g.numVert;i++){
+      // targets.push(i);
+      S[i] = false;
+   }
+
+   int RRselectCount = 0;
+   int myselectCount = 0;
+
+   int my_node;
+   int RR_node;
+   int my_pre = 0;
+   int my_range;
+   for(int j=0;j<k-1;j++){
+      int* counter = icExp_lazyI(g,s,mc);
+      int min_expect = *min_element(counter+0,counter+g.numVert);
+
+      // cout<<"what in Set: ";
+      // // set<int, greater<int> >::iterator k;
+      // for (const auto k:S) {
+      //    cout<<k<<" ";
+      // }
+      // cout<<endl;
+      for(int i = 0; i<g.numVert;i++){
+         // targets.push(i);
+         T[i] = false;
+      }
+      // find node from myopic, and Target nodes in RR as well.
+      for(int i=0;i<g.numVert;i++){
+         if(S[i] ==true){
+            continue;
+         }
+         else{
+            if(counter[i]==min_expect){
+               my_node = i;
+            }
+            if(counter[i]<=min_expect+epsilon){
+               T[i] = true;
+               // my_range = i;
+            }
+         }
+      }
+
+
+      int my_expect = 0;
+      int my_count = 0;
+
+
+
+
+      int* V = onehopReach(g,T,S);
+      for(int i = 0;i<g.numVert;i++){
+         if(S[V[i]] == true){
+            continue;
+         }
+         else{
+            RR_node = V[i];
+            break;
+         }
+      }
+
+
+      int RR_count = 0;
+      int RR_select =0;
+      queue<int> my_s;
+      queue<int> RR_s;
+
+      // RR expectation
+      RR_s = s;
+      RR_s.push(RR_node);
+      counter = icExp_lazyI(g,RR_s,mc);
+      int RR_expect = *min_element(counter+0,counter+g.numVert);
+
+      for(int i=0; i<g.numVert;i++){
+         if(counter[i]==my_expect){
+            RR_select = i;
+         }
+      }
+
+      // printf("RR_expect %d with node %d",RR_expect,RR_select);
+      for(int i=0;i<g.numVert;i++){
+         if(counter[i]<=my_expect+epsilon*mc){
+            RR_count++;
+         }
+      }
+      // s.pop();
+
+
+      // if myopic find repeat node as previous round, use RR selected node.
+      if(my_pre == my_node){
+         // node = -1;
+         printf("round %d using RR's set\n",j);
+         // cout<<"pick node "<<RR_node<<endl;
+         s.push(RR_node);
+         Q.push_back(RR_node);  
+         S[RR_node] = true;
+         maxinf.push_back(RR_expect*1.0/mc); 
+         RRselectCount++;
+         // cout<<"same with previous node selection in myopic."<<endl;
+         continue;
+      }
+      else{
+         my_s = s;
+         my_s.push(my_node);
+         // are we using s but not RR_s here? answer: should be RR_s? really?
+         counter = icExp_lazyI(g,my_s,mc);
+         my_expect = *min_element(counter+0,counter+g.numVert);
+         for(int i=0;i<g.numVert;i++){
+            if(counter[i]<=my_expect+epsilon*mc){
+               my_count++;
+            }
+         }
+         // s.pop();
+      }
+
+      // printf("==========================================\n");
+      // printf("myopic selection is %d, RR selection is %d ", my_node,RR_node);
+
+      if(my_expect>RR_expect){
+         // printf("round %d using myopic's set\n",j);
+         // cout<<"pick node "<<my_node<<endl;
+         s.push(my_node);
+         Q.push_back(my_node); 
+         S[my_node] = true;
+         my_pre = my_node;
+         maxinf.push_back(my_expect*1.0/mc);
+         myselectCount++;
+      }
+      else if(my_expect==RR_expect){
+         if(my_count>=RR_count){
+            // cout<<"using myopic's set: ";
+            // cout<<"pick node "<<my_node<<endl;
+            s.push(my_node);
+            Q.push_back(my_node);  
+            S[my_node] = true;
+            my_pre = my_node;
+            maxinf.push_back(my_expect*1.0/mc);
+            myselectCount++;
+            // break;
+         }
+         else{
+            printf("round %d using RR's set\n",j);
+            // cout<<"pick node "<<RR_node<<endl;
+            s.push(RR_node);
+            Q.push_back(RR_node);  
+            S[RR_node] = true;
+            maxinf.push_back(RR_expect*1.0/mc);  
+            RRselectCount++;        
+         }
+      }
+      else{
+         printf("round %d using RR's set\n",j);
+         // cout<<"pick node "<<RR_node<<endl;
+         s.push(RR_node);
+         Q.push_back(RR_node); 
+         S[RR_node] = true;
+         maxinf.push_back(RR_expect*1.0/mc);
+         RRselectCount++;
+      }
+      // break;
+
+      end_t = clock();
+      duration = (double)(end_t-start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
+
+   }
+   values res ={Q,maxinf,tim};
+   // res.sed = ;
+   // res.inf = maxinf;
+   // res.time = times;
+   printf("Myopic using %d times, RR using %d times\n",myselectCount,RRselectCount);
+   return res;
+
+}
+
+
+values tSuper(InfGraph g, int k, int mc, double epsilon){
+
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+
+   double *probC = (double*)malloc(sizeof(double)*g.numVert);
+   set<int> G;
+   vector<double> inf;
+   vector<int> Q;
+   vector<double> maxinf, tim;
+   queue<int> s;
+
+
+   for(int i = 0; i<g.numVert;i++){
+      // targets.push(i);
+      S[i] = false;
+   }
+
+   int RRselectCount = 0;
+   int myselectCount = 0;
+   int wholeProb;
+   int my_node;
+   int RR_node;
+   int my_pre = 0;
+   int my_range;
+   for(int j=0;j<k-1;j++){
+      wholeProb = 0;
+      int* counter = icExp_lazyI(g,s,mc);
+      int min_expect = *min_element(counter+0,counter+g.numVert);
+
+      // cout<<"what in Set: ";
+      // // set<int, greater<int> >::iterator k;
+      // for (const auto k:S) {
+      //    cout<<k<<" ";
+      // }
+      // cout<<endl;
+      for(int i = 0; i<g.numVert;i++){
+         // targets.push(i);
+         T[i] = false;
+         wholeProb += counter[i];
+      }
+      // find node from myopic, and Target nodes in RR as well.
+      for(int i=0;i<g.numVert;i++){
+         probC[i] = counter[i]*1.0/wholeProb;
+         if(S[i] ==true){
+            continue;
+         }
+         else{
+            if(counter[i]==min_expect){
+               my_node = i;
+            }
+            if(counter[i]<=min_expect+epsilon){
+               T[i] = true;
+               // my_range = i;
+            }
+         }
+      }
+
+
+      int my_expect = 0;
+      int my_count = 0;
+
+
+
+
+      int* V = tieReach(g,T,S,probC);
+      for(int i = 0;i<g.numVert;i++){
+         if(S[V[i]] == true){
+            continue;
+         }
+         else{
+            RR_node = V[i];
+            break;
+         }
+      }
+
+
+      int RR_count = 0;
+      int RR_select =0;
+      queue<int> my_s;
+      queue<int> RR_s;
+
+      // RR expectation
+      RR_s = s;
+      RR_s.push(RR_node);
+      counter = icExp_lazyI(g,RR_s,mc);
+      int RR_expect = *min_element(counter+0,counter+g.numVert);
+
+      for(int i=0; i<g.numVert;i++){
+         if(counter[i]==my_expect){
+            RR_select = i;
+         }
+      }
+
+      // printf("RR_expect %d with node %d",RR_expect,RR_select);
+      for(int i=0;i<g.numVert;i++){
+         if(counter[i]<=my_expect+epsilon*mc){
+            RR_count++;
+         }
+      }
+      // s.pop();
+
+
+      // if myopic find repeat node as previous round, use RR selected node.
+      if(my_pre == my_node){
+         // node = -1;
+         printf("round %d using RR's set\n",j);
+         // cout<<"pick node "<<RR_node<<endl;
+         s.push(RR_node);
+         Q.push_back(RR_node);  
+         S[RR_node] = true;
+         maxinf.push_back(RR_expect*1.0/mc); 
+         RRselectCount++;
+         // cout<<"same with previous node selection in myopic."<<endl;
+         continue;
+      }
+      else{
+         my_s = s;
+         my_s.push(my_node);
+         // are we using s but not RR_s here? answer: should be RR_s? really?
+         counter = icExp_lazyI(g,my_s,mc);
+         my_expect = *min_element(counter+0,counter+g.numVert);
+         for(int i=0;i<g.numVert;i++){
+            if(counter[i]<=my_expect+epsilon*mc){
+               my_count++;
+            }
+         }
+         // s.pop();
+      }
+
+      // printf("==========================================\n");
+      // printf("myopic selection is %d, RR selection is %d ", my_node,RR_node);
+
+      if(my_expect>RR_expect){
+         // printf("round %d using myopic's set\n",j);
+         // cout<<"pick node "<<my_node<<endl;
+         s.push(my_node);
+         Q.push_back(my_node); 
+         S[my_node] = true;
+         my_pre = my_node;
+         maxinf.push_back(my_expect*1.0/mc);
+         myselectCount++;
+      }
+      else if(my_expect==RR_expect){
+         if(my_count>=RR_count){
+            // cout<<"using myopic's set: ";
+            // cout<<"pick node "<<my_node<<endl;
+            s.push(my_node);
+            Q.push_back(my_node);  
+            S[my_node] = true;
+            my_pre = my_node;
+            maxinf.push_back(my_expect*1.0/mc);
+            myselectCount++;
+            // break;
+         }
+         else{
+            printf("round %d using RR's set\n",j);
+            // cout<<"pick node "<<RR_node<<endl;
+            s.push(RR_node);
+            Q.push_back(RR_node);  
+            S[RR_node] = true;
+            maxinf.push_back(RR_expect*1.0/mc);  
+            RRselectCount++;        
+         }
+      }
+      else{
+         printf("round %d using RR's set\n",j);
+         // cout<<"pick node "<<RR_node<<endl;
+         s.push(RR_node);
+         Q.push_back(RR_node); 
+         S[RR_node] = true;
          maxinf.push_back(RR_expect*1.0/mc);
          RRselectCount++;
       }

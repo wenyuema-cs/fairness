@@ -57,7 +57,10 @@ void logRec(Graph g, values res, inPut in, string method){
     myfile.open ("log/"+in.dataset+"_"+method+".csv");
     myfile << "k;seed;inf;tim\n";
     for(int i = 0;i<in.BUDGET;i++){
-        myfile << to_string(i)+";"+to_string(res.sed[i])+";"+to_string(res.inf[i])+";"+to_string(res.time[i])+"\n";
+      if(i%10==0){
+         myfile << to_string(i)+";"+to_string(res.sed[i])+";"+to_string(res.inf[i])+";"+to_string(res.time[i])+"\n";
+      }
+        
     }
     myfile.close();
 }

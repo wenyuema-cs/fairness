@@ -13,6 +13,7 @@
 #include <utility> 
 #include <vector>
 #include"graph.h"
+#include<omp.h>
 
 using namespace std;
 using namespace std :: chrono;
@@ -191,7 +192,7 @@ int* icExp_lazyI(Graph g, queue<int> s,int mc){ //, double alpha
    }
    // vector<int> counter(g.numVert);
    // cout<<"Counter==="<<counter.size()<<endl;
-
+   // #pragma omp parallel for reduction(m10x1Add: S)
    for(int i = 0; i<mc; i++){
       for (int i =0; i < g.numVert;i++){
          g.act[i]=0;
@@ -260,6 +261,88 @@ int* icExp_lazyI(Graph g, queue<int> s,int mc){ //, double alpha
    // free(counter);
    return counter;
 }
+
+int* icExp_lazyI(Graph g, queue<int> s,int mc){ //, double alpha
+
+   srand (time(NULL));
+   int *counter = (int*)malloc(sizeof(int)*g.numVert);
+   // srand (time(NULL));
+
+   for (int i =0;i<g.numVert;i++){
+      counter[i]=0;
+   }
+   // vector<int> counter(g.numVert);
+   // cout<<"Counter==="<<counter.size()<<endl;
+   // #pragma omp parallel for reduction(m10x1Add: S)
+   for(int i = 0; i<mc; i++){
+      for (int j =0; j < g.numVert;j++){
+         g.act[j]=0;
+      }
+      queue<int> origi = s;
+
+      // cout<<"before mc:"<<endl;
+      while(!origi.empty()){
+            int make = origi.front();
+            g.act[make] = 1;
+            counter[make]++;
+            // printf("%d[%d] ", make,counter[make]);
+            origi.pop();
+      }       
+      // cout<<"before mc:"<<endl;
+      // for (int count =0; count<g.numVert;count++){
+      //    // cout<< <<counter[count]<<" ";
+      //    printf("%d[%d] ", count,counter[count]);
+      // }
+      // cout<<endl;    
+
+      queue<int> ss=s;
+      while(!ss.empty()){
+         //cout<<"=========================================================="<<endl;
+         int candi = ss.front(); 
+         
+         // "<<candi<<" here"<<endl;
+         ss.pop();
+         for (long unsigned int neighbor =0; neighbor < g.nxt[candi].size(); neighbor++){
+            //cout<<"node "<<g.nxt[candi][neighbor]<<" may have chance be activate "<<endl;
+            double rn = randam();
+            if((g.nxt_prob[candi][neighbor] > rn) && (g.act[g.nxt[candi][neighbor]]==0)){
+            // if((g.nxt_prob[candi][neighbor] > randx()) && (g.act[g.nxt[candi][neighbor]]==0)){
+               // printf("random number: %f", rn);
+               g.act[g.nxt[candi][neighbor]] = 1;
+               // cout<<"node active: "<< g.nxt[candi][neighbor]<<endl;
+               ss.push(g.nxt[candi][neighbor]);
+               counter[g.nxt[candi][neighbor]]++;
+               //cout<<"is larger than node "<<g.nxt[candi][neighbor]<<" as probability"<< g.nxt_prob[candi][neighbor]<<endl;
+
+               
+            }
+            
+         }
+         
+      }
+   }
+   //cout<<"--------------------------------------"<<endl;
+   // int min_expect = *min_element(counter+0, counter+g.numVert);
+   //cout << "min expected is "<<min_expect<<" in set" <<endl;
+   // int num = 0;
+   //cout<<"after mc:"<<endl;
+   /*
+   for(const auto& count : counter){
+      const auto& count = count/mc;
+      // cout<<count<<" ";
+
+   }
+   */
+   // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
+   // for (int i =0;i<g.numVert;i++){
+   //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
+   //    cout<<counter[i]<<" ";
+   // }
+   // cout << endl;
+   // free(counter);
+   return counter;
+}
+
 
 float* icExp_hyper(InfGraph g, queue<int> s, int mc){
    

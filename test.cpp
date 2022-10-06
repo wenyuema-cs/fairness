@@ -1,48 +1,40 @@
-#include<iostream>
-#include<algorithm>
-#include <queue>
-#include <set>
-#include <vector>
-#include <time.h>
-#include <cmath>
-// #include "log.h"
-// #include "expect.h"
-#include "strategies.h"
+/* Compile with:
+     gcc -Wall -fopenmp -o ar ar.c
+   Run with:
+     OMP_DISPLAY_ENV=TRUE OMP_NUM_THREADS=10 OMP_NESTED=TRUE ./ar
+*/
+#include <stdio.h>
+#include <omp.h>
+struct m10x1 {int v[10];};
+int A [] =       {84, 30, 95, 94, 36, 73, 52, 23, 2, 13};  
+struct m10x1 S = {(int*)malloc(sizeof(int)*10);};
+int n,m=0;
 
-using namespace std;
-
-
-void log(Graph g, values res, inPut in, string method){
-    
-    std::ofstream myfile;
-    myfile.open ("log/"+in.dataset+"_"+method+".csv");
-    myfile << "k;seed;inf;tim\n";
-    for(int i = 0;i<in.BUDGET;i++){
-        myfile << to_string(i)+";"+to_string(res.sed[i])+";"+to_string(res.inf[i])+";"+to_string(res.time[i])+"\n";
-    }
-    // myfile << "This is the first cell in the first column.\n";
-    // myfile << "a,b,c,\n";
-    // myfile << "c,s,v,\n";
-    // myfile << "1,2,3.456\n";
-    // myfile << "semi;colon";
-    myfile.close();
-
+void print_m10x1(struct m10x1 x){
+  int i;
+  for(i=0;i<10;i++) printf("%d ",x.v[i]);
+  printf("\n");
 }
 
+struct m10x1 add_m10x1(struct m10x1 x,struct m10x1 y){
+  struct m10x1 r ={{ 0,  0,  0,  0,  0,  0,  0,  0, 0,  0}};
+  int i;
+  for (i=0;i<10;i++) r.v[i]=x.v[i]+y.v[i];
+  return r;
+}
 
-int main(){
-    int MCROUNDS =3;
-    int BUDGET = 100;
-    double EPSILON = 0.01;
-    string method = "greedy";
-    values res;
-    // queue<int> s;
+#pragma omp declare reduction(m10x1Add: struct m10x1: \
+omp_out=add_m10x1(omp_out, omp_in)) initializer( \
+omp_priv={{ 0,  0,  0,  0,  0,  0,  0,  0, 0,  0}} )
 
-    InfGraph g = buildGraph("star");
-    
-    inPut in ={.BUDGET =BUDGET,.MCROUNDS= MCROUNDS, .EPSILON = EPSILON,.dataset = "star", .SAMPLE_ROUND= 100, .ALPHA = 0.1};
-    res = greedy(g, BUDGET, MCROUNDS, EPSILON);
-
-    log(g,res,in,method);
-
+int main ()
+{
+  #pragma omp parallel for reduction(m10x1Add: S)
+  for ( n=0 ; n<10 ; ++n )
+    {
+      for (m=0; m<=n; ++m){
+        S.v[n] += A[m];
+      }
+    }
+  print_m10x1(S);
 }

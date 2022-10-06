@@ -79,9 +79,8 @@ int main(int argc, char *argv[])
       // test of RR
       if(method.compare("RR")==0){
          res = rrSelect(g , BUDGET,MCROUNDS, EPSILON);
-         // res = rrSelect_mysel_hyper(g , BUDGET,MCROUNDS, EPSILON);
-         // res = rrSelect_hyper(g , BUDGET,MCROUNDS, EPSILON); 
-         // logRec(g, res, in, method);
+         // res = rbfsSelect(g , BUDGET,MCROUNDS, EPSILON);
+         
       }
 
       if(method.compare("sRR")==0){
@@ -89,6 +88,9 @@ int main(int argc, char *argv[])
       }
       if(method.compare("pRR")==0){
          res = rpSelect(g , BUDGET,MCROUNDS, EPSILON);
+      }
+      if(method.compare("tRR")==0){
+         res = rtieSelect(g , BUDGET,MCROUNDS, EPSILON);
       }
 
       if(method.compare("RR_hyper")==0){
@@ -122,10 +124,20 @@ int main(int argc, char *argv[])
          g.build_hyper_graph_r(MCROUNDS);
          res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
       }      
-      if(method.compare("super")==0){
+      if(method.compare("superR")==0){
          res = super(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
       }
 
+
+      if(method.compare("supers")==0){
+         res = sSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+      }
+      // if(method.compare("superp")==0){
+      //    res = pSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+      // }
+      if(method.compare("supert")==0){
+         res = tSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+      }
       for(int j = 0;j<BUDGET;j++){
          double spread = res.inf[j];
          double clock = res.time[j];
