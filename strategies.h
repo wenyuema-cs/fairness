@@ -752,6 +752,8 @@ values myOpic(InfGraph g, int k, int MCROUNDS, double epsilon,string model){
          counter = ltExp(g, QueueS, MCROUNDS);
       if(model == "ic")
          counter = icExp_lazyI(g, QueueS, MCROUNDS);
+      if(model == "icc")
+         counter = icExp_lazycon(g, QueueS, MCROUNDS);
       double min_expect = *min_element(counter+0, counter+g.numVert);
       for(int i=0;i<g.numVert;i++){ //n is the size of array a[]
          if(counter[i]==min_expect){
@@ -1339,7 +1341,7 @@ values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
       // cout << endl;
       double min_expect = *min_element(counter+0,counter+g.numVert);
       min_expect = min_expect*1.0/MCROUNDS;
-      printf("%d rounds influence spread as: %f\n",i,min_expect);
+      // printf("%d rounds influence spread as: %f\n",i,min_expect);
       inf.push_back(min_expect);
    }
    values res ={Q,inf,tim};
@@ -1404,10 +1406,10 @@ int* tieReach(InfGraph g, bool* t, bool* S,double *probC){
    return V;
 }
 
-values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
+values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
    bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
    bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
-
+   int* counter = (int*)malloc(sizeof(int));
    // record p(u,s)
    double *probC = (double*)malloc(sizeof(double)*g.numVert);
    clock_t start_t, end_t;
@@ -1458,7 +1460,10 @@ values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
       //    }
       // }
       int wholeProb = 0;
-      int* counter = icExp_lazyI(g,s,MCROUNDS);
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
 
       while(!targets.empty()){
          targets.pop();
@@ -1479,13 +1484,16 @@ values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
             targetNum ++;
          }
       }
-      printf("round %d: there are %d nodes in target set\n",budget,targetNum);
+      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
    }
    queue<int> RR_selet;
    //  min_expect;
    for(int i=0;i<k;i++){
       RR_selet.push(Q[i]);
-      int* counter =icExp_lazyI(g,RR_selet,MCROUNDS);
+      if(model == "lt")
+         counter = ltExp(g, RR_selet, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, RR_selet, MCROUNDS);
       // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
       // for (int i =0;i<g.numVert;i++){
       //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
@@ -2210,7 +2218,7 @@ values rrSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
 }
 
 /**/
-values sSuper(InfGraph g, int k, int mc, double epsilon){
+values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
 
    clock_t start_t, end_t;
    double duration;
@@ -2218,6 +2226,7 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
 
    bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
    bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+   int* counter = (int*)malloc(sizeof(int));
    set<int> G;
    vector<double> inf;
    vector<int> Q;
@@ -2238,7 +2247,10 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
    int my_pre = 0;
    int my_range;
    for(int j=0;j<k-1;j++){
-      int* counter = icExp_lazyI(g,s,mc);
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
       int min_expect = *min_element(counter+0,counter+g.numVert);
 
       // cout<<"what in Set: ";
@@ -2294,7 +2306,10 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
       // RR expectation
       RR_s = s;
       RR_s.push(RR_node);
-      counter = icExp_lazyI(g,RR_s,mc);
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
       int RR_expect = *min_element(counter+0,counter+g.numVert);
 
       for(int i=0; i<g.numVert;i++){
@@ -2305,7 +2320,7 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
 
       // printf("RR_expect %d with node %d",RR_expect,RR_select);
       for(int i=0;i<g.numVert;i++){
-         if(counter[i]<=my_expect+epsilon*mc){
+         if(counter[i]<=my_expect+epsilon*MCROUNDS){
             RR_count++;
          }
       }
@@ -2320,7 +2335,7 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
          s.push(RR_node);
          Q.push_back(RR_node);  
          S[RR_node] = true;
-         maxinf.push_back(RR_expect*1.0/mc); 
+         maxinf.push_back(RR_expect*1.0/MCROUNDS); 
          RRselectCount++;
          // cout<<"same with previous node selection in myopic."<<endl;
          continue;
@@ -2329,10 +2344,13 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
          my_s = s;
          my_s.push(my_node);
          // are we using s but not RR_s here? answer: should be RR_s? really?
-         counter = icExp_lazyI(g,my_s,mc);
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
          my_expect = *min_element(counter+0,counter+g.numVert);
          for(int i=0;i<g.numVert;i++){
-            if(counter[i]<=my_expect+epsilon*mc){
+            if(counter[i]<=my_expect+epsilon*MCROUNDS){
                my_count++;
             }
          }
@@ -2349,7 +2367,7 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
          Q.push_back(my_node); 
          S[my_node] = true;
          my_pre = my_node;
-         maxinf.push_back(my_expect*1.0/mc);
+         maxinf.push_back(my_expect*1.0/MCROUNDS);
          myselectCount++;
       }
       else if(my_expect==RR_expect){
@@ -2360,7 +2378,7 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
             Q.push_back(my_node);  
             S[my_node] = true;
             my_pre = my_node;
-            maxinf.push_back(my_expect*1.0/mc);
+            maxinf.push_back(my_expect*1.0/MCROUNDS);
             myselectCount++;
             // break;
          }
@@ -2370,7 +2388,7 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
             s.push(RR_node);
             Q.push_back(RR_node);  
             S[RR_node] = true;
-            maxinf.push_back(RR_expect*1.0/mc);  
+            maxinf.push_back(RR_expect*1.0/MCROUNDS);  
             RRselectCount++;        
          }
       }
@@ -2380,7 +2398,7 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
          s.push(RR_node);
          Q.push_back(RR_node); 
          S[RR_node] = true;
-         maxinf.push_back(RR_expect*1.0/mc);
+         maxinf.push_back(RR_expect*1.0/MCROUNDS);
          RRselectCount++;
       }
       // break;
@@ -2400,7 +2418,7 @@ values sSuper(InfGraph g, int k, int mc, double epsilon){
 }
 
 
-values tSuper(InfGraph g, int k, int mc, double epsilon){
+values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
 
    clock_t start_t, end_t;
    double duration;
@@ -2408,6 +2426,7 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
 
    bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
    bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+   int* counter = (int*)malloc(sizeof(int));
 
    double *probC = (double*)malloc(sizeof(double)*g.numVert);
    set<int> G;
@@ -2431,7 +2450,10 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
    int my_range;
    for(int j=0;j<k-1;j++){
       wholeProb = 0;
-      int* counter = icExp_lazyI(g,s,mc);
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
       int min_expect = *min_element(counter+0,counter+g.numVert);
 
       // cout<<"what in Set: ";
@@ -2489,7 +2511,10 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
       // RR expectation
       RR_s = s;
       RR_s.push(RR_node);
-      counter = icExp_lazyI(g,RR_s,mc);
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
       int RR_expect = *min_element(counter+0,counter+g.numVert);
 
       for(int i=0; i<g.numVert;i++){
@@ -2500,7 +2525,7 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
 
       // printf("RR_expect %d with node %d",RR_expect,RR_select);
       for(int i=0;i<g.numVert;i++){
-         if(counter[i]<=my_expect+epsilon*mc){
+         if(counter[i]<=my_expect+epsilon*MCROUNDS){
             RR_count++;
          }
       }
@@ -2515,7 +2540,7 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
          s.push(RR_node);
          Q.push_back(RR_node);  
          S[RR_node] = true;
-         maxinf.push_back(RR_expect*1.0/mc); 
+         maxinf.push_back(RR_expect*1.0/MCROUNDS); 
          RRselectCount++;
          // cout<<"same with previous node selection in myopic."<<endl;
          continue;
@@ -2524,10 +2549,13 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
          my_s = s;
          my_s.push(my_node);
          // are we using s but not RR_s here? answer: should be RR_s? really?
-         counter = icExp_lazyI(g,my_s,mc);
-         my_expect = *min_element(counter+0,counter+g.numVert);
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
+      my_expect = *min_element(counter+0,counter+g.numVert);
          for(int i=0;i<g.numVert;i++){
-            if(counter[i]<=my_expect+epsilon*mc){
+            if(counter[i]<=my_expect+epsilon*MCROUNDS){
                my_count++;
             }
          }
@@ -2544,7 +2572,7 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
          Q.push_back(my_node); 
          S[my_node] = true;
          my_pre = my_node;
-         maxinf.push_back(my_expect*1.0/mc);
+         maxinf.push_back(my_expect*1.0/MCROUNDS);
          myselectCount++;
       }
       else if(my_expect==RR_expect){
@@ -2555,7 +2583,7 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
             Q.push_back(my_node);  
             S[my_node] = true;
             my_pre = my_node;
-            maxinf.push_back(my_expect*1.0/mc);
+            maxinf.push_back(my_expect*1.0/MCROUNDS);
             myselectCount++;
             // break;
          }
@@ -2565,7 +2593,7 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
             s.push(RR_node);
             Q.push_back(RR_node);  
             S[RR_node] = true;
-            maxinf.push_back(RR_expect*1.0/mc);  
+            maxinf.push_back(RR_expect*1.0/MCROUNDS);  
             RRselectCount++;        
          }
       }
@@ -2575,7 +2603,7 @@ values tSuper(InfGraph g, int k, int mc, double epsilon){
          s.push(RR_node);
          Q.push_back(RR_node); 
          S[RR_node] = true;
-         maxinf.push_back(RR_expect*1.0/mc);
+         maxinf.push_back(RR_expect*1.0/MCROUNDS);
          RRselectCount++;
       }
       // break;

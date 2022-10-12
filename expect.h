@@ -340,54 +340,65 @@ int* icExp_lazycon(Graph g, queue<int> s,int mc){ //, double alpha
    }
    // vector<int> counter(g.numVert);
    // cout<<"Counter==="<<counter.size()<<endl;
-   // #pragma omp parallel for reduction(m10x1Add: S)
-   for(int i = 0; i<mc; i++){
-      for (int j =0; j < g.numVert;j++){
-         g.act[j]=0;
-      }
-      queue<int> origi = s;
+   int myArray[g.numVert] = {};
+   #pragma omp parallel for firstprivate(mc,g,s) num_threads(10) reduction(+:myArray) schedule(dynamic,50) default(none)
+      //#pragma omp for 
+      for(int i = 0; i<mc; i++){
+         // for (int j =0; j < g.numVert;j++){
+         //    g.act[j]=0;
+         // }
 
-      // cout<<"before mc:"<<endl;
-      while(!origi.empty()){
-            int make = origi.front();
-            g.act[make] = 1;
-            counter[make]++;
-            // printf("%d[%d] ", make,counter[make]);
-            origi.pop();
-      }       
-      // cout<<"before mc:"<<endl;
-      // for (int count =0; count<g.numVert;count++){
-      //    // cout<< <<counter[count]<<" ";
-      //    printf("%d[%d] ", count,counter[count]);
-      // }
-      // cout<<endl;    
+         bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+         queue<int> origi = s;
+         // cout<<"before mc:"<<endl;
+         while(!origi.empty()){
+               int make = origi.front();
+               S[make] = true;
+               myArray[make]++;
+               // printf("%d[%d] ", make,counter[make]);
+               origi.pop();
+         }      
+         // cout<<"before mc:"<<endl;
+         // for (int count =0; count<g.numVert;count++){
+         //    // cout<< <<counter[count]<<" ";
+         //    printf("%d[%d] ", count,counter[count]);
+         // }
+         // cout<<endl;    
 
-      queue<int> ss=s;
-      while(!ss.empty()){
-         //cout<<"=========================================================="<<endl;
-         int candi = ss.front(); 
-         
-         // "<<candi<<" here"<<endl;
-         ss.pop();
-         for (long unsigned int neighbor =0; neighbor < g.nxt[candi].size(); neighbor++){
-            //cout<<"node "<<g.nxt[candi][neighbor]<<" may have chance be activate "<<endl;
-            double rn = randam();
-            if((g.nxt_prob[candi][neighbor] > rn) && (g.act[g.nxt[candi][neighbor]]==0)){
-            // if((g.nxt_prob[candi][neighbor] > randx()) && (g.act[g.nxt[candi][neighbor]]==0)){
-               // printf("random number: %f", rn);
-               g.act[g.nxt[candi][neighbor]] = 1;
-               // cout<<"node active: "<< g.nxt[candi][neighbor]<<endl;
-               ss.push(g.nxt[candi][neighbor]);
-               counter[g.nxt[candi][neighbor]]++;
-               //cout<<"is larger than node "<<g.nxt[candi][neighbor]<<" as probability"<< g.nxt_prob[candi][neighbor]<<endl;
+         queue<int> ss=s;
+         while(!ss.empty()){
+            //cout<<"=========================================================="<<endl;
+            int candi = ss.front(); 
+            
+            // "<<candi<<" here"<<endl;
+            ss.pop();
+            for (long unsigned int neighbor =0; neighbor < g.nxt[candi].size(); neighbor++){
+               //cout<<"node "<<g.nxt[candi][neighbor]<<" may have chance be activate "<<endl;
+               double rn = randam();
+               if((g.nxt_prob[candi][neighbor] > rn) && (!S[g.nxt[candi][neighbor]])){
+               // if((g.nxt_prob[candi][neighbor] > randx()) && (g.act[g.nxt[candi][neighbor]]==0)){
+                  // printf("random number: %f", rn);
+                  S[g.nxt[candi][neighbor]] = true;
+                  // cout<<"node active: "<< g.nxt[candi][neighbor]<<endl;
+                  ss.push(g.nxt[candi][neighbor]);
+                  myArray[g.nxt[candi][neighbor]]++;
+                  //cout<<"is larger than node "<<g.nxt[candi][neighbor]<<" as probability"<< g.nxt_prob[candi][neighbor]<<endl;
 
+                  
+               }
                
             }
             
          }
-         
       }
+   
+   int max = 0;
+   for (int i=0;i<g.numVert;i++){
+      counter[i] = myArray[i];
+      if (max<myArray[i])
+         max = myArray[i];
    }
+   // cout<<"max counter of seed:"<<max<<endl;
    //cout<<"--------------------------------------"<<endl;
    // int min_expect = *min_element(counter+0, counter+g.numVert);
    //cout << "min expected is "<<min_expect<<" in set" <<endl;

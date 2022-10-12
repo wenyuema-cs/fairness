@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
    int SAMPLE_ROUND = atoi(argv[6]);
    double ALPHA = atof(argv[7]);
    string model = argv[8];
-   int TEST = 10;
+   int TEST = 1;
 
    //inPut in ={in.BUDGET =BUDGET,in.MCROUNDS= MCROUNDS, in.EPSILON = EPSILON,in.dataset = dataset, in.SAMPLE_ROUND= SAMPLE_ROUND};
    inPut in ={.BUDGET =BUDGET,.MCROUNDS= MCROUNDS, .EPSILON = EPSILON,.dataset = dataset, .SAMPLE_ROUND= SAMPLE_ROUND, .ALPHA = ALPHA, .MODEL = model};
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
          res = rpSelect(g , BUDGET,MCROUNDS, EPSILON);
       }
       if(method.compare("tRR")==0){
-         res = rtieSelect(g , BUDGET,MCROUNDS, EPSILON);
+         res = rtieSelect(g , BUDGET,MCROUNDS, EPSILON, in.MODEL);
       }
 
       if(method.compare("RR_hyper")==0){
@@ -131,13 +131,13 @@ int main(int argc, char *argv[])
 
 
       if(method.compare("supers")==0){
-         res = sSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+         res = sSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
       }
       // if(method.compare("superp")==0){
       //    res = pSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
       // }
       if(method.compare("supert")==0){
-         res = tSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+         res = tSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
       }
       for(int j = 0;j<BUDGET;j++){
          double spread = res.inf[j];
