@@ -34,14 +34,16 @@ int main(int argc, char *argv[])
    string dataset =argv[5];
    int SAMPLE_ROUND = atoi(argv[6]);
    double ALPHA = atof(argv[7]);
-   string model = argv[8];
-   int TEST = 1;
+   int TEST = atoi(argv[8]);;
+   string model = argv[9];
+   int step = 20 ;
 
    //inPut in ={in.BUDGET =BUDGET,in.MCROUNDS= MCROUNDS, in.EPSILON = EPSILON,in.dataset = dataset, in.SAMPLE_ROUND= SAMPLE_ROUND};
-   inPut in ={.BUDGET =BUDGET,.MCROUNDS= MCROUNDS, .EPSILON = EPSILON,.dataset = dataset, .SAMPLE_ROUND= SAMPLE_ROUND, .ALPHA = ALPHA, .MODEL = model};
+   inPut in ={.BUDGET =BUDGET,.MCROUNDS= MCROUNDS, .EPSILON = EPSILON,.dataset = dataset, .SAMPLE_ROUND= SAMPLE_ROUND, .ALPHA = ALPHA, .TEST =TEST, .MODEL = model};
    cout<<"method: "<<method<<" "<<endl;
    cout<<"BUDGET: "<<BUDGET<<" "<<MCROUNDS<<" " <<EPSILON <<" "<< dataset<<" "  <<SAMPLE_ROUND<<" " <<endl;
-
+   cout<<"influence model: "<< model<<endl;
+   cout<<"internal step: "<<to_string(step)<<endl;
    
    InfGraph g = buildGraph(dataset);
 
@@ -71,7 +73,7 @@ int main(int argc, char *argv[])
 
       
       if(method.compare("greedy")==0){
-         res = greedy(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+         res = greedy(g, in.BUDGET, in.MCROUNDS, in.EPSILON,in.MODEL);
          // res = greedy_hyper(g,  in.BUDGET, in.MCROUNDS, in.EPSILON);
 
          // logRec(g,res, in, method);
@@ -85,13 +87,35 @@ int main(int argc, char *argv[])
       }
 
       if(method.compare("sRR")==0){
-         res = rSelect(g , BUDGET,MCROUNDS, EPSILON, in.MODEL);
+         res = rSelect(g, BUDGET,MCROUNDS, EPSILON, in.MODEL);
       }
       if(method.compare("pRR")==0){
-         res = rpSelect(g , BUDGET,MCROUNDS, EPSILON);
+         res = rpSelect(g, BUDGET,MCROUNDS, EPSILON);
       }
       if(method.compare("tRR")==0){
-         res = rtieSelect(g , BUDGET,MCROUNDS, EPSILON, in.MODEL);
+         res = rtieSelect(g, BUDGET, MCROUNDS, EPSILON, in.MODEL);
+      }
+
+      if(method.compare("lsRR")==0){
+         res = rselectLs(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,step);
+      }
+
+      if(method.compare("lgRR")==0){
+         res = rgselectLs(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,step);
+      }
+
+      if(method.compare("lRR")==0){
+         res = lSelect(g, BUDGET, MCROUNDS, EPSILON, in.MODEL);
+      }
+
+      if(method.compare("supers")==0){
+         res = sSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
+      }
+      // if(method.compare("superp")==0){
+      //    res = pSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+      // }
+      if(method.compare("supert")==0){
+         res = tSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
       }
 
       if(method.compare("RR_hyper")==0){
@@ -130,15 +154,7 @@ int main(int argc, char *argv[])
       }
 
 
-      if(method.compare("supers")==0){
-         res = sSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
-      }
-      // if(method.compare("superp")==0){
-      //    res = pSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
-      // }
-      if(method.compare("supert")==0){
-         res = tSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
-      }
+
       for(int j = 0;j<BUDGET;j++){
          double spread = res.inf[j];
          double clock = res.time[j];

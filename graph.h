@@ -49,6 +49,7 @@ struct inPut{
    string dataset;
    int SAMPLE_ROUND;
    double ALPHA;
+   int TEST;
    string MODEL;
 };
 

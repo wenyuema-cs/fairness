@@ -53,15 +53,42 @@ void logRec(Graph g, values res, inPut in, string method){
 
    outfile.close();
 
+   char sp = 'spa';
+   int step = 20;
+   // char tw = 'twitter';
+   // char fb = 'facebook';
+   // char bitcoin = 'bitcoin';
+
+   string logfile = "log/"+to_string(in.EPSILON)+"/";
+   cout<<"output file: "<< logfile<<endl;
    std::ofstream myfile;
-    myfile.open ("log/"+in.MODEL+"_"+in.dataset+"_"+method+".csv");
-    myfile << "k;seed;inf;tim\n";
-    for(int i = 0;i<in.BUDGET;i++){
+   if((method.compare("lgRR")==0) || (method.compare("lsRR")==0)){
+      myfile.open (logfile+in.MODEL+"_"+in.dataset+"_"+method+"_"+to_string(step)+".csv");      
+   }
+   else{
+      myfile.open (logfile+in.MODEL+"_"+in.dataset+"_"+method+".csv");
+   }
+   myfile << "k;seed;inf;tim\n";
+   if ((in.dataset.find(sp) != string::npos ))
+   {
+   //   cout<<"Yes, string contains the character - "<< endl;
+   for(int i = 0;i<in.BUDGET;i++){
       if(i%10==0){
          myfile << to_string(i)+";"+to_string(res.sed[i])+";"+to_string(res.inf[i])+";"+to_string(res.time[i])+"\n";
       }
-        
-    }
-    myfile.close();
+      
+   } 
+   
+   }
+   else
+   {
+      for(int i = 0;i<in.BUDGET;i++){
+         if(i%10==0){
+            myfile << to_string(i)+";"+to_string(res.sed[i])+";"+to_string(res.inf[i])+";"+to_string(res.time[i])+"\n";
+         }
+         
+      } 
+   }
+   myfile.close();
 }
    

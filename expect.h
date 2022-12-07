@@ -103,7 +103,83 @@ pair<double,int> icExp(Graph g, queue<int> s,int mc,double epsilon){
    return make_pair(min, num);
 }
 
+pair<double, int> ltExpg(Graph g, queue<int> s,int mc,double epsilon){
 
+   int *counter = (int*)malloc(sizeof(int)*g.numVert);
+   // srand (time(NULL));
+
+   for (int i =0;i<g.numVert;i++){
+      counter[i]=0;
+   }
+   
+   for(int i = 0; i<mc; i++){
+      for (int i =0; i < g.numVert;i++){
+         g.act[i]=0;
+      }
+      queue<int> origi = s;
+
+      // cout<<"before mc:";
+      while(!origi.empty()){
+            int make = origi.front();
+            g.act[make] = 1;
+            counter[make]++;
+            // printf("%d[%d] ", make,counter[make]);
+            origi.pop();
+      }        
+      // cout<<endl;
+      // printf("does node 499 been activate: %d", g.act[499]);
+      queue<int> ss=s;
+      double sum;
+      while(!ss.empty()){
+         //cout<<"=========================================================="<<endl;
+         int candi = ss.front(); 
+         
+         // cout<<"pop node"<<candi<<" here"<<endl;
+         ss.pop();
+         double rn = randam();
+         if(g.pre[candi].size() == 0 )
+            continue;
+         for (long unsigned int neighbor =0; neighbor < g.pre[candi].size(); neighbor++){
+            //cout<<"node "<<g.nxt[candi][neighbor]<<" may have chance be activate "<<endl;
+            // sum += g.pre_prob[candi][neighbor];
+            rn -= g.pre_prob[candi][neighbor];
+            if((rn<=0) && (g.act[g.pre[candi][neighbor]]==0)){
+            // if((g.nxt_prob[candi][neighbor] > randx()) && (g.act[g.nxt[candi][neighbor]]==0)){
+               // printf("random number: %f", rn);
+               // printf("rn as: %f\n", rn);
+               g.act[g.pre[candi][neighbor]] = 1;
+               // cout<<"node active: "<< g.nxt[candi][neighbor]<<endl;
+               ss.push(g.pre[candi][neighbor]);
+               counter[g.pre[candi][neighbor]]++;
+               break;
+               //cout<<"is larger than node "<<g.nxt[candi][neighbor]<<" as probability"<< g.nxt_prob[candi][neighbor]<<endl;
+
+               
+            }
+            
+         }
+         
+      }
+   }
+
+   int min_expect = *min_element(counter+0, counter+g.numVert);
+   int num=0;
+
+   for(int count = 0; count<g.numVert;count++){
+      if(counter[count] <=min_expect+epsilon){
+         num++;
+      }
+   }
+   free(counter);
+   // printf("counter this time:");
+   // for (int i =0;i<g.numVert;i++){
+   //    printf("%d[%d]",i,counter[i]);
+   // }
+   // cout<<endl;
+
+   double min = min_expect*1.0/mc;
+   return make_pair(min,num);
+}
 float* icExp_lazy(Graph g, queue<int> s,int mc){ //, double alpha
 
    srand (time(NULL));

@@ -55,7 +55,7 @@ float geoMean(float arr[], int n)
 }
 
 
-values greedy(Graph g, int k, int mc, double epsilon){
+values greedy(Graph g, int k, int mc, double epsilon, string model){
    clock_t start_t, end_t;
    double duration;
    start_t = clock();
@@ -64,10 +64,11 @@ values greedy(Graph g, int k, int mc, double epsilon){
    vector<int> Q;
    vector<double> maxinf, tim;
    queue<int> s;
+   pair<double,int> res;
    for(int i=0; i<g.numVert;i++){
       G.insert(i);
    }
-   cout<<endl;
+   // cout<<endl;
    int node = -1;
    for(int _ =0; _<k;_++){
       double max_ = 0;
@@ -86,7 +87,10 @@ values greedy(Graph g, int k, int mc, double epsilon){
          s=QueueS;
          s.push(*j);
          //cout<<"search max with node:"<<*j<<endl;
-         pair<double,int> res = icExp(g, s, mc, epsilon);
+         if(model =="lt")
+            res = ltExpg(g,s,mc,epsilon);
+         if(model == "ic")
+            res = icExp(g, s, mc, epsilon);
          double exp_j=res.first;
          int set_j=res.second;
       
@@ -136,11 +140,11 @@ values greedy(Graph g, int k, int mc, double epsilon){
    // }
    vector<double> inf;
    inf = maxinf;
-   values res ={Q,inf,tim};
+   values res_log ={Q,inf,tim};
    // res.sed = ;
    
    // res.time = times;
-   return res;
+   return res_log;
    //return make_pair(S,maxinf);
 }
 
@@ -1247,7 +1251,7 @@ int* onehopReach(InfGraph g, bool* t, bool* S){
    //    cout<<V[i]<<" ";
    // }
    // cout<<endl;
-   
+   free(counter);
    return V;
 }
 
@@ -1761,8 +1765,6 @@ values rrSelect_hyper(InfGraph g, int k, int MCROUNDS, double EPSILON){
 }
 
 
-
-
 int* RSet_mysel(Graph g, queue<int> t, set<int> s){
    // cout<<"in Rset"<<endl;
    
@@ -2114,6 +2116,7 @@ values super(InfGraph g, int k, int mc, double epsilon){
    return res;
 
 }
+
 values rrSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
    
    clock_t start_t, end_t;
@@ -2621,3 +2624,636 @@ values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
    return res;
 
 }
+
+pair<int,int> lsGreedy(InfGraph g, int MCROUNDS, set<int> s, string model){
+   set<int> redSet;
+   queue<int> qReduce;
+   int* counter = (int*)malloc(sizeof(int));
+   set<int, greater<int> >::iterator i;
+   set<int, greater<int>>::iterator j;
+   int min_expect,remove_node;
+   // orgSet = s;
+   int node;
+   int max = 0;
+   // printf("we are in reducing node!!!!!\n");
+   // printf("min_expectation is :\n", min_expect);
+   // cout<<endl;
+   for(i = s.begin(); i!=s.end(); i++){
+
+      redSet = s;
+      // printf("if we remove node %d\n",*i);
+      remove_node = *i;
+      redSet.erase(remove_node);
+      while(!qReduce.empty()){
+         qReduce.pop();
+      }
+      for(j = redSet.begin();j!=redSet.end();j++){
+         qReduce.push(*j);
+      }
+      if(model == "lt")
+         counter = ltExp(g, qReduce, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, qReduce, MCROUNDS);
+      
+      min_expect = *min_element(counter+0,counter+g.numVert);
+      
+      // printf("%d ", min_expect);
+      if (min_expect>=max){
+         node = *i;
+         max = min_expect;
+         // cout << "max "<<max<< ", ";
+      }
+      // cout<<endl;
+
+      // orgSet.insert(remove_node);
+   }
+   printf("we are removing node %d, with  %d expectation \n", node, max);
+   return make_pair(node,max);
+}
+
+
+pair<int,int> addGreedy(InfGraph g, int MCROUNDS, set<int> s, string model){
+   set<int> restSet,G;
+   queue<int> qAdd;
+   int* counter;
+   set<int, greater<int> >::iterator i;
+   set<int, greater<int>>::iterator j;
+   int min_expect,add_node;
+   // orgSet = s;
+   int node;
+   int max = 0;
+
+
+   for(int nodes=0; nodes<g.numVert; nodes++){
+      G.insert(nodes);
+   }
+   
+   // printf("seed set as :");
+   // for(i = s.begin(); i!=s.end(); i++){
+   //    // cout<< *i<< " ";
+   // }
+   // cout<<endl;
+
+   set_difference(G.begin(),G.end(),s.begin(),s.end(),inserter(restSet,restSet.begin()));
+
+   // printf("rest node as :");
+   // for(i = restSet.begin(); i!=restSet.end(); i++){
+   //    cout<< *i<< " ";
+   // }
+   // cout<<endl;
+
+   for(i = restSet.begin(); i!=restSet.end(); i++){
+      // if(*i%20==0){
+      //    printf("%d",*i);
+      // }
+      add_node = *i;
+      s.insert(add_node);
+
+      for(j = s.begin();j!=s.end();j++){
+         qAdd.push(*j);
+      }
+      if(model == "lt")
+         counter = ltExp(g, qAdd, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, qAdd, MCROUNDS);
+      // qAdd.pop();
+      min_expect = *min_element(counter+0,counter+g.numVert);
+      // printf("%d ", min_expect);
+      while(!qAdd.empty()){
+         qAdd.pop();
+      }
+      if (min_expect>=max){
+         node = *i;
+         max = min_expect;
+      }
+      free(counter);
+      s.erase(add_node);
+
+      // orgSet.insert(remove_node);
+   }
+   printf("we are adding node %d, with %d min expectation\n", node, max);
+   return make_pair(node,max);
+
+}
+values rselectLs(InfGraph g, int k, int MCROUNDS, double EPSILON, string model,int step){
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *remove = (bool*)malloc(sizeof(bool)*g.numVert);
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+   // set<int> S;
+
+   int* counter = (int*)malloc(sizeof(int));
+   vector<int> Q;
+   vector<double> inf;
+   vector<double>  tim;
+   queue<int> targets,s;
+   int replace_node, previous_node, min_expect;
+   set<int> sets;
+   pair<int,int> ls_candi;
+   double loop_size;
+
+   for(int i = 0; i<g.numVert;i++){
+      // targets.push(i);
+      S[i] = false;
+      T[i] = true;
+      remove[i]=false;
+   }
+
+   for(int budget = 0; budget<k; budget++){
+      int targetNum = 0;
+      int* V  = onehopReach(g, T, S);
+      
+
+      int node;
+      for (int i=0;i<g.numVert;i++){
+         if((S[V[i]]==true) || (remove[V[i]]==true)){
+            continue;
+         }
+         else{
+            node = V[i];
+            // printf("node %d can be selected\n",node);
+            break;
+         }
+      }
+      
+      S[node] = true;
+      sets.insert(node);
+
+      if( budget%step == 0 ){
+         replace_node = -1;
+         previous_node = -1;
+         printf("we are in sepcial budget %d !!!!!!!",budget);
+         loop_size = 1;
+         double threshold =0.3*step;
+
+         // local search on budget = 5
+         while((replace_node != node) && (previous_node != node )&&(loop_size<=threshold)){
+            loop_size++;
+            ls_candi = lsGreedy(g, MCROUNDS, sets, model);
+            replace_node = ls_candi.first;
+            remove[replace_node]=true;
+
+            sets.erase(replace_node);
+            S[replace_node] = false;
+
+            //target node re-selection
+            while(!targets.empty()){
+               targets.pop();
+            }
+            for(int i=0; i<g.numVert;i++){
+               T[i]=false;
+            }
+            // targetNum = 0;
+
+            min_expect = ls_candi.second;
+
+            for(int i=0; i<g.numVert;i++){
+               if(counter[i]<= min_expect+EPSILON){
+                  T[i]=true;
+                  // targetNum ++;
+               }
+            }
+               
+            int* V  = onehopReach(g, T, S);
+
+            for (int i=0;i<g.numVert;i++){
+               if((S[V[i]]==true) || (remove[V[i]]==true)){
+                  continue;
+               }
+               else{
+                  previous_node = node;
+                  node = V[i];
+                  // printf("node %d can be selected\n",node);
+                  break;
+               }
+            }
+
+            sets.insert(node);
+            S[node] = true;
+            
+
+            printf("%d %d %d\n", replace_node, node, previous_node);
+
+            // printf("abandon node %d ",replace_node);
+            // printf("add node %d\n",node);
+
+         }         
+         
+      }
+      Q.push_back(node);
+      end_t = clock();
+      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
+
+      // for(int i=0;i<g.numVert;i++){
+      //    if(S[i]==true){
+      //       s.push(i);
+      //    }
+      // }
+
+
+      while(!s.empty()){
+         s.pop();
+      }
+
+      for(int i=0; i<g.numVert;i++){
+         if(S[i]==true){
+            s.push(i);
+         }
+         
+      }
+
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
+
+      while(!targets.empty()){
+         targets.pop();
+      }
+      for(int i=0; i<g.numVert;i++){
+         T[i]=false;
+      }
+      targetNum = 0;
+
+      min_expect = *min_element(counter+0, counter+g.numVert);
+
+      // int select;
+      for(int i=0; i<g.numVert;i++){
+         if(counter[i]<= min_expect+EPSILON){
+            T[i]=true;
+            targetNum ++;
+         }
+      }
+      free(V);
+      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
+   }
+   free(S);
+   free(T);
+   free(remove);
+   queue<int> RR_selet;
+   //  min_expect;
+   for(int i=0;i<k;i++){
+      RR_selet.push(Q[i]);
+      if(model == "lt")
+         counter = ltExp(g, RR_selet, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, RR_selet, MCROUNDS);
+      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
+      // for (int i =0;i<g.numVert;i++){
+      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
+      //    cout<<counter[i]<<" ";
+      // }
+      // cout << endl;
+      double min_expect = *min_element(counter+0,counter+g.numVert);
+      min_expect = min_expect*1.0/MCROUNDS;
+      // printf("%d rounds influence spread as: %f\n",i,min_expect);
+      inf.push_back(min_expect);
+   }
+   free(counter);
+   values res ={Q,inf,tim};
+   return res;
+}
+
+
+values rgselectLs(InfGraph g, int k, int MCROUNDS, double EPSILON, string model,int step){
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+   // bool *remove = (bool*)malloc(sizeof(bool)*g.numVert);
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+   // set<int> S;
+
+   int* counter = (int*)malloc(sizeof(int));
+   vector<int> Q;
+   vector<double> inf;
+   vector<double>  tim;
+   queue<int> targets,s;
+   int replace_node, add_node, previous_node, min_expect, add_expect;
+   set<int> sets;
+   pair<int,int> ls_candi,lg_candi;
+   double loop_size;
+
+   for(int i = 0; i<g.numVert;i++){
+      // targets.push(i);
+      S[i] = false;
+      T[i] = true;
+      // remove[i]=false;
+   }
+
+   for(int budget = 0; budget<k; budget++){
+      int targetNum = 0;
+      int* V  = onehopReach(g, T, S);
+      
+
+      int node;
+      for (int i=0;i<g.numVert;i++){
+         if(S[V[i]]==true){
+            continue;
+         }
+         else{
+            node = V[i];
+            // printf("node %d can be selected\n",node);
+            break;
+         }
+      }
+      
+      S[node] = true;
+      sets.insert(node);
+   
+      while(!s.empty()){
+         s.pop();
+      }
+
+      for(int i=0; i<g.numVert;i++){
+         if(S[i]==true){
+            s.push(i);
+         }
+         
+      }
+
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
+
+      while(!targets.empty()){
+         targets.pop();
+      }
+      for(int i=0; i<g.numVert;i++){
+         T[i]=false;
+      }
+      // targetNum = 0;
+
+      min_expect = *min_element(counter+0, counter+g.numVert);
+      // printf("min expectation before LS %d\n",min_expect);
+
+      if (budget % step ==0){
+      // if( (budget%step == 0) && (budget!=0) ){
+         replace_node = -1;
+         // previous_node = -1;
+         printf("we are in sepcial budget %d: \n",budget);
+         // loop_size = 1;
+         // double threshold = 0.3*10;
+
+         // local search on budget = 5
+         // while((replace_node != node) && (previous_node != node )&&(loop_size<=threshold)){
+         loop_size++;
+         ls_candi = lsGreedy(g, MCROUNDS, sets, model);
+         replace_node = ls_candi.first;
+         // remove[replace_node]=true;
+
+         sets.erase(replace_node);
+         S[replace_node] = false;
+
+
+         lg_candi = addGreedy(g, MCROUNDS, sets, model);
+         add_node = lg_candi.first;
+         add_expect = lg_candi.second;
+
+         if(add_expect>min_expect){
+            printf("%d is larger than %d, node %d has been add\n",add_expect, min_expect,add_node);
+            node = add_node;
+         }
+         else{
+            printf("keep previous node\n");
+            node = replace_node;
+         }
+
+         
+
+         printf("%d %d\n", replace_node, node);
+
+            // printf("abandon node %d ",replace_node);
+            // printf("add node %d\n",node);
+
+         // }         
+         
+      }
+
+      sets.insert(node);
+      S[node] = true;
+      Q.push_back(node);
+
+      end_t = clock();
+      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
+
+      // int select;
+      for(int i=0; i<g.numVert;i++){
+         if(counter[i]<= min_expect+EPSILON){
+            T[i]=true;
+            targetNum ++;
+         }
+      }
+      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
+   }
+   free(S);
+   free(T);
+   queue<int> RR_selet;
+   //  min_expect;
+   for(int i=0;i<k;i++){
+      RR_selet.push(Q[i]);
+      if(model == "lt")
+         counter = ltExp(g, RR_selet, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, RR_selet, MCROUNDS);
+      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
+      // for (int i =0;i<g.numVert;i++){
+      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
+      //    cout<<counter[i]<<" ";
+      // }
+      // cout << endl;
+      double expect = *min_element(counter+0,counter+g.numVert);
+      expect = expect*1.0/MCROUNDS;
+      // printf("%d rounds influence spread as: %f\n",i,min_expect);
+      inf.push_back(expect);
+   }
+   values res ={Q,inf,tim};
+   return res;
+}
+
+
+pair<int,int> replaceGreedy(InfGraph g, queue<int> s,int MCROUNDS,string model){
+   set<int> sets;
+   int seed;
+   pair<int,int> ls_candi,lg_candi;
+   int min_expect,replace_node,add_node,add_expect,node,expect;
+   int* counter;
+   int ls_times;
+	MCROUNDS = MCROUNDS * 10;
+
+   node = s.front();
+   if(model == "lt")
+      counter = ltExp(g, s, MCROUNDS);
+   if(model == "ic")
+      counter = icExp_lazyI(g, s, MCROUNDS);
+   min_expect = *min_element(counter+0,counter+g.numVert);
+
+   while(!s.empty()){
+      seed = s.front();
+      sets.insert(seed);
+      s.pop();
+   }
+   printf("expectation before is %d\n",min_expect);
+   expect = min_expect;
+   free(counter);
+/*   */
+   ls_times = 0;
+   do{
+      ls_times++;
+      printf("we are in %d LS:\n",ls_times);
+      ls_candi = lsGreedy(g, MCROUNDS, sets, model);
+      replace_node = ls_candi.first;
+
+      // if(remove[replace_node] == true){
+      //    break;
+      // }
+      sets.erase(replace_node);
+
+      lg_candi = addGreedy(g, MCROUNDS, sets, model);
+      add_node = lg_candi.first;
+      add_expect = lg_candi.second;
+
+      if(add_expect>expect){
+         printf("%d is larger than %d, node %d has been add\n",add_expect, expect,add_node);
+         node = add_node;
+         sets.insert(add_node);
+         expect = add_expect;
+      }
+      else{
+         printf("keep previous node\n");
+         node = replace_node;
+         sets.insert(replace_node);
+      }
+
+   }while(node!=replace_node);
+
+   printf("add node %d with expect %d\n",node,expect);
+   return make_pair(node, expect);
+}
+
+values lSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
+   bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
+   bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
+   clock_t start_t, end_t;
+   double duration;
+   start_t = clock();
+   // set<int> S;
+
+   int* counter;
+   vector<int> Q;
+   vector<double> inf;
+   vector<double>  tim;
+   queue<int> targets,s;
+   double min_expect;
+
+   for(int i = 0; i<g.numVert;i++){
+      // targets.push(i);
+      S[i] = false;
+      T[i] = true;
+   }
+
+   for(int budget = 0; budget<k; budget++){
+      int targetNum = 0;
+      int* V  = onehopReach(g, T, S);
+      
+
+      int node;
+      for (int i=0;i<g.numVert;i++){
+         if(S[V[i]]==true){
+            continue;
+         }
+         else{
+            node = V[i];
+            // printf("node %d can be selected\n",node);
+            break;
+         }
+      }
+      
+      S[node] = true;
+      s.push(node);
+      Q.push_back(node);
+      end_t = clock();
+      duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
+      tim.push_back(duration);
+
+      // for(int i=0;i<g.numVert;i++){
+      //    if(S[i]==true){
+      //       s.push(i);
+      //    }
+      // }
+
+      if(model == "lt")
+         counter = ltExp(g, s, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, s, MCROUNDS);
+
+      while(!targets.empty()){
+         targets.pop();
+      }
+      for(int i=0; i<g.numVert;i++){
+         T[i]=false;
+      }
+      targetNum = 0;
+
+      min_expect = *min_element(counter+0, counter+g.numVert);
+
+      // int select;
+      for(int i=0; i<g.numVert;i++){
+         if(counter[i]<= min_expect+EPSILON){
+            T[i]=true;
+            targetNum ++;
+         }
+      }
+      // printf("round %d: there are %d nodes in target set\n",budget,targetNum);
+   }
+   free(counter);
+   free(S);
+   free(T);
+   queue<int> RR_selet;
+   vector<int> seed;
+   vector<double> timevec;
+   pair<int,int> lsres;
+   printf("finish RR selection\n");
+   for(int i=0;i<k;i++){
+      RR_selet.push(Q[i]);
+
+      if(i%10 == 0){
+         start_t = clock();
+         printf("\nwe are in sepcial budget %d: \n",i);
+         lsres = replaceGreedy(g, RR_selet, MCROUNDS,model);
+         double expect = lsres.second;
+         min_expect = lsres.second*0.1/MCROUNDS;
+         printf("min expectation is %f\n",min_expect);
+
+         end_t = clock();
+         duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
+         
+         seed.push_back(lsres.first);
+         inf.push_back(min_expect);
+         timevec.push_back(tim[i]+duration);
+      }
+      else{
+         seed.push_back(0);
+         inf.push_back(0);
+         timevec.push_back(0);
+         continue;
+      }
+      // cout<<"counter in this mc process, with "<< sizeof(counter)<<" nodes: " <<endl;
+      // for (int i =0;i<g.numVert;i++){
+      //    // counter[i]= std::min<float>(counter[i]/mc, alpha);
+      //    cout<<counter[i]<<" ";
+      // }
+      // cout << endl;
+      // double min_expect = *min_element(counter+0,counter+g.numVert);
+
+   }
+   values res = {seed,inf,timevec};
+   return res;
+}
+
+
