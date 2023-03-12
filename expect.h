@@ -129,7 +129,7 @@ pair<double, int> ltExpg(Graph g, queue<int> s,int mc,double epsilon){
       // cout<<endl;
       // printf("does node 499 been activate: %d", g.act[499]);
       queue<int> ss=s;
-      double sum;
+      // double sum;
       while(!ss.empty()){
          //cout<<"=========================================================="<<endl;
          int candi = ss.front(); 
@@ -365,7 +365,7 @@ int* ltExp(Graph g, queue<int> s,int mc){ //, double alpha
       // cout<<endl;
       // printf("does node 499 been activate: %d", g.act[499]);
       queue<int> ss=s;
-      double sum;
+      // double sum;
       while(!ss.empty()){
          //cout<<"=========================================================="<<endl;
          int candi = ss.front(); 
@@ -405,6 +405,9 @@ int* ltExp(Graph g, queue<int> s,int mc){ //, double alpha
    return counter;
 }
 
+
+/*
+// for paralla program
 int* icExp_lazycon(Graph g, queue<int> s,int mc){ //, double alpha
 
    srand (time(NULL));
@@ -494,8 +497,10 @@ int* icExp_lazycon(Graph g, queue<int> s,int mc){ //, double alpha
    // }
    // cout << endl;
    // free(counter);
-   return counter;
-}
+   //return counter;
+//}
+
+
 
 
 float* icExp_hyper(InfGraph g, queue<int> s, int mc){

@@ -1,4 +1,5 @@
 #include "expect.h"
+#include <numeric>
 
 using namespace std;
 using namespace std :: chrono;
@@ -55,7 +56,7 @@ float geoMean(float arr[], int n)
 }
 
 
-values greedy(Graph g, int k, int mc, double epsilon, string model){
+values greedy(Graph g, int k, int mc, double epsilon, string model, string calcu){
    clock_t start_t, end_t;
    double duration;
    start_t = clock();
@@ -707,7 +708,7 @@ values myOpic_trick(Graph g, int k, int mc, double epsilon){
 }
 
 
-values myOpic(InfGraph g, int k, int MCROUNDS, double epsilon,string model){
+values myOpic(InfGraph g, int k, int MCROUNDS, double epsilon,string model, string calcu){
    clock_t start_t, end_t;
    double duration;
    start_t = clock();
@@ -740,6 +741,7 @@ values myOpic(InfGraph g, int k, int MCROUNDS, double epsilon,string model){
    S.insert(fir_node);
    Q.push_back(fir_node);   
    int node = -1;
+   double sum_inf = 0;
    for(int _ =0; _<k-1;_++){
       // double min_ = 0x3f3f3f;
       set<int, greater<int> >::iterator i;
@@ -756,8 +758,8 @@ values myOpic(InfGraph g, int k, int MCROUNDS, double epsilon,string model){
          counter = ltExp(g, QueueS, MCROUNDS);
       if(model == "ic")
          counter = icExp_lazyI(g, QueueS, MCROUNDS);
-      if(model == "icc")
-         counter = icExp_lazycon(g, QueueS, MCROUNDS);
+      // if(model == "icc")
+      //    counter = icExp_lazycon(g, QueueS, MCROUNDS);
       double min_expect = *min_element(counter+0, counter+g.numVert);
       for(int i=0;i<g.numVert;i++){ //n is the size of array a[]
          if(counter[i]==min_expect){
@@ -791,8 +793,15 @@ values myOpic(InfGraph g, int k, int MCROUNDS, double epsilon,string model){
       G.erase(node);
       S.insert(node);
       Q.push_back(node);
-      inf.push_back(min_expect*1.0/MCROUNDS);
 
+      if(calcu == "min"){
+         inf.push_back(min_expect*1.0/MCROUNDS);
+      }
+
+      if(calcu == "sum"){
+         sum_inf = std::accumulate(counter+0, counter+g.numVert,0);
+         inf.push_back(sum_inf/MCROUNDS);
+      }
 
       
       //cout<<"slecting "<<node<< " with time: "<< duration<<endl;
@@ -1061,7 +1070,7 @@ int* bsfReach(Graph g, bool* t, bool*s){
          while(!oneSpread.empty()){
             int node = oneSpread.front();
             oneSpread.pop();
-            for(int w = 0; w<g.pre[node].size();w++){
+            for(long unsigned int w = 0; w<g.pre[node].size();w++){
 
                // counter one spread without repeating
                if((spread[w] == false) && (s[i] == false )){
@@ -1255,7 +1264,7 @@ int* onehopReach(InfGraph g, bool* t, bool* S){
    return V;
 }
 
-values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
+values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model, string calcu){
    bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
    bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
    clock_t start_t, end_t;
@@ -1331,6 +1340,7 @@ values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
    }
    queue<int> RR_selet;
    //  min_expect;
+   double sum_inf=0;
    for(int i=0;i<k;i++){
       RR_selet.push(Q[i]);
       if(model == "lt")
@@ -1346,7 +1356,15 @@ values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
       double min_expect = *min_element(counter+0,counter+g.numVert);
       min_expect = min_expect*1.0/MCROUNDS;
       // printf("%d rounds influence spread as: %f\n",i,min_expect);
-      inf.push_back(min_expect);
+      
+      if(calcu == "min"){
+         inf.push_back(min_expect);
+      }
+      if(calcu == "sum"){
+         sum_inf = std::accumulate(counter+0, counter+g.numVert,0);
+         inf.push_back(sum_inf/MCROUNDS);
+      }
+      
    }
    values res ={Q,inf,tim};
    return res;
@@ -1356,7 +1374,7 @@ values rSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
 int* tieReach(InfGraph g, bool* t, bool* S,double *probC){
    
    // queue<int> s;
-   int wholePro =0;
+   // int wholePro =0;
    int *V = (int*)malloc(sizeof(int)*g.numVert);
    int *counter = (int*)malloc(sizeof(int)*g.numVert);
    // double *probC = (double*)malloc(sizeof(double)*g.numVert);
@@ -1410,7 +1428,7 @@ int* tieReach(InfGraph g, bool* t, bool* S,double *probC){
    return V;
 }
 
-values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
+values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model, string calcu){
    bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
    bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
    int* counter = (int*)malloc(sizeof(int));
@@ -1492,6 +1510,7 @@ values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model)
    }
    queue<int> RR_selet;
    //  min_expect;
+   double sum_inf=0;
    for(int i=0;i<k;i++){
       RR_selet.push(Q[i]);
       if(model == "lt")
@@ -1507,7 +1526,14 @@ values rtieSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model)
       double min_expect = *min_element(counter+0,counter+g.numVert);
       min_expect = min_expect*1.0/MCROUNDS;
       // printf("%d rounds influence spread as: %f\n",i,min_expect);
-      inf.push_back(min_expect);
+      // inf.push_back(min_expect);
+      if(calcu == "min"){
+         inf.push_back(min_expect);
+      }
+      if(calcu == "sum"){
+         sum_inf = std::accumulate(counter+0, counter+g.numVert,0);
+         inf.push_back(sum_inf/MCROUNDS);
+      }
    }
    values res ={Q,inf,tim};
    return res;
@@ -1600,7 +1626,7 @@ values rpSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
    }
 
    for(int budget = 0; budget<k; budget++){
-      int reachNum = 0;
+      // int reachNum = 0;
       int targetNum = 0;
       int* V  = probReach(g, T, S);
       
@@ -1666,6 +1692,7 @@ values rpSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
       min_expect = min_expect*1.0/MCROUNDS;
       // printf("%d rounds influence spread as: %f\n",i,min_expect);
       inf.push_back(min_expect);
+      
    }
    values res ={Q,inf,tim};
    return res;
@@ -1959,7 +1986,7 @@ values super(InfGraph g, int k, int mc, double epsilon){
    int my_node;
    int RR_node;
    int my_pre = 0;
-   int my_range;
+   // int my_range;
    for(int j=0;j<k-1;j++){
       int* counter = icExp_lazyI(g,s,mc);
       int min_expect = *min_element(counter+0,counter+g.numVert);
@@ -1989,6 +2016,7 @@ values super(InfGraph g, int k, int mc, double epsilon){
 
 
       int my_expect = 0;
+      int my_sum;
       int my_count = 0;
 
 
@@ -2049,6 +2077,7 @@ values super(InfGraph g, int k, int mc, double epsilon){
          //???
          counter = icExp_lazyI(g,RR_s,mc);
          my_expect = *min_element(counter+0,counter+g.numVert);
+         my_sum = std::accumulate(counter+0,counter+g.numVert,0);
          for(int i=0;i<g.numVert;i++){
             if(counter[i]<=my_expect+epsilon*mc){
                my_count++;
@@ -2221,7 +2250,7 @@ values rrSelect(InfGraph g, int k, int MCROUNDS, double EPSILON){
 }
 
 /**/
-values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
+values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model,string calcu){
 
    clock_t start_t, end_t;
    double duration;
@@ -2248,7 +2277,7 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
    int my_node;
    int RR_node;
    int my_pre = 0;
-   int my_range;
+   // int my_range;
    for(int j=0;j<k-1;j++){
       if(model == "lt")
          counter = ltExp(g, s, MCROUNDS);
@@ -2284,6 +2313,7 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
 
 
       int my_expect = 0;
+      int my_sum;
       int my_count = 0;
 
 
@@ -2314,6 +2344,7 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
       if(model == "ic")
          counter = icExp_lazyI(g, s, MCROUNDS);
       int RR_expect = *min_element(counter+0,counter+g.numVert);
+      int RR_sum = std::accumulate(counter+0, counter+g.numVert,0);
 
       for(int i=0; i<g.numVert;i++){
          if(counter[i]==my_expect){
@@ -2338,7 +2369,12 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
          s.push(RR_node);
          Q.push_back(RR_node);  
          S[RR_node] = true;
-         maxinf.push_back(RR_expect*1.0/MCROUNDS); 
+         if(calcu == "min"){
+            maxinf.push_back(RR_expect*1.0/MCROUNDS);
+         }
+         if(calcu == "sum"){
+            maxinf.push_back(RR_sum*1.0/MCROUNDS);
+         }
          RRselectCount++;
          // cout<<"same with previous node selection in myopic."<<endl;
          continue;
@@ -2349,14 +2385,18 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
          // are we using s but not RR_s here? answer: should be RR_s? really?
       if(model == "lt")
          counter = ltExp(g, s, MCROUNDS);
-      if(model == "ic")
+      if(model == "ic"){
          counter = icExp_lazyI(g, s, MCROUNDS);
          my_expect = *min_element(counter+0,counter+g.numVert);
+
+         my_sum = std::accumulate(counter+0,counter+g.numVert,0);
          for(int i=0;i<g.numVert;i++){
             if(counter[i]<=my_expect+epsilon*MCROUNDS){
                my_count++;
             }
          }
+      }
+
          // s.pop();
       }
 
@@ -2370,7 +2410,12 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
          Q.push_back(my_node); 
          S[my_node] = true;
          my_pre = my_node;
-         maxinf.push_back(my_expect*1.0/MCROUNDS);
+         if(calcu == "min"){
+            maxinf.push_back(my_expect*1.0/MCROUNDS);
+         }
+         if(calcu == "sum"){
+            maxinf.push_back(my_sum*1.0/MCROUNDS);
+         }
          myselectCount++;
       }
       else if(my_expect==RR_expect){
@@ -2381,7 +2426,12 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
             Q.push_back(my_node);  
             S[my_node] = true;
             my_pre = my_node;
-            maxinf.push_back(my_expect*1.0/MCROUNDS);
+            if(calcu == "min"){
+               maxinf.push_back(my_expect*1.0/MCROUNDS);
+            }
+            if(calcu == "sum"){
+               maxinf.push_back(my_sum*1.0/MCROUNDS);
+            }
             myselectCount++;
             // break;
          }
@@ -2391,7 +2441,12 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
             s.push(RR_node);
             Q.push_back(RR_node);  
             S[RR_node] = true;
-            maxinf.push_back(RR_expect*1.0/MCROUNDS);  
+            if(calcu == "min"){
+               maxinf.push_back(RR_expect*1.0/MCROUNDS);
+            }
+            if(calcu == "sum"){
+               maxinf.push_back(RR_sum*1.0/MCROUNDS);
+            }
             RRselectCount++;        
          }
       }
@@ -2401,7 +2456,12 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
          s.push(RR_node);
          Q.push_back(RR_node); 
          S[RR_node] = true;
-         maxinf.push_back(RR_expect*1.0/MCROUNDS);
+         if(calcu == "min"){
+            maxinf.push_back(RR_expect*1.0/MCROUNDS);
+         }
+         if(calcu == "sum"){
+            maxinf.push_back(RR_sum*1.0/MCROUNDS);
+         }
          RRselectCount++;
       }
       // break;
@@ -2421,7 +2481,7 @@ values sSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
 }
 
 
-values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
+values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model, string calcu){
 
    clock_t start_t, end_t;
    double duration;
@@ -2449,8 +2509,9 @@ values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
    int wholeProb;
    int my_node;
    int RR_node;
+   int my_sum,RR_sum;
    int my_pre = 0;
-   int my_range;
+   // int my_range;
    for(int j=0;j<k-1;j++){
       wholeProb = 0;
       if(model == "lt")
@@ -2519,7 +2580,7 @@ values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
       if(model == "ic")
          counter = icExp_lazyI(g, s, MCROUNDS);
       int RR_expect = *min_element(counter+0,counter+g.numVert);
-
+      RR_sum = std::accumulate(counter+0,counter+g.numVert,0);
       for(int i=0; i<g.numVert;i++){
          if(counter[i]==my_expect){
             RR_select = i;
@@ -2538,12 +2599,17 @@ values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
       // if myopic find repeat node as previous round, use RR selected node.
       if(my_pre == my_node){
          // node = -1;
-         printf("round %d using RR's set\n",j);
+         // printf("round %d using RR's set\n",j);
          // cout<<"pick node "<<RR_node<<endl;
          s.push(RR_node);
          Q.push_back(RR_node);  
          S[RR_node] = true;
-         maxinf.push_back(RR_expect*1.0/MCROUNDS); 
+         if(calcu == "min"){
+            maxinf.push_back(RR_expect*1.0/MCROUNDS);
+         }
+         if(calcu == "sum"){
+            maxinf.push_back(RR_sum*1.0/MCROUNDS);
+         }
          RRselectCount++;
          // cout<<"same with previous node selection in myopic."<<endl;
          continue;
@@ -2557,6 +2623,7 @@ values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
       if(model == "ic")
          counter = icExp_lazyI(g, s, MCROUNDS);
       my_expect = *min_element(counter+0,counter+g.numVert);
+      my_sum = std::accumulate(counter+0,counter+g.numVert,0);
          for(int i=0;i<g.numVert;i++){
             if(counter[i]<=my_expect+epsilon*MCROUNDS){
                my_count++;
@@ -2575,7 +2642,12 @@ values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
          Q.push_back(my_node); 
          S[my_node] = true;
          my_pre = my_node;
-         maxinf.push_back(my_expect*1.0/MCROUNDS);
+         if(calcu == "min"){
+            maxinf.push_back(my_expect*1.0/MCROUNDS);
+         }
+         if(calcu == "sum"){
+            maxinf.push_back(my_sum*1.0/MCROUNDS);
+         }
          myselectCount++;
       }
       else if(my_expect==RR_expect){
@@ -2586,27 +2658,43 @@ values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
             Q.push_back(my_node);  
             S[my_node] = true;
             my_pre = my_node;
-            maxinf.push_back(my_expect*1.0/MCROUNDS);
+            if(calcu == "min"){
+               maxinf.push_back(my_expect*1.0/MCROUNDS);
+            }
+            if(calcu == "sum"){
+               maxinf.push_back(my_sum*1.0/MCROUNDS);
+            }
             myselectCount++;
             // break;
          }
          else{
-            printf("round %d using RR's set\n",j);
+            // printf("round %d using RR's set\n",j);
             // cout<<"pick node "<<RR_node<<endl;
             s.push(RR_node);
             Q.push_back(RR_node);  
             S[RR_node] = true;
-            maxinf.push_back(RR_expect*1.0/MCROUNDS);  
+            if(calcu == "min"){
+               maxinf.push_back(RR_expect*1.0/MCROUNDS);
+            }
+            if(calcu == "sum"){
+               maxinf.push_back(RR_sum*1.0/MCROUNDS);
+            }
             RRselectCount++;        
          }
       }
       else{
-         printf("round %d using RR's set\n",j);
+         // printf("round %d using RR's set\n",j);
          // cout<<"pick node "<<RR_node<<endl;
          s.push(RR_node);
          Q.push_back(RR_node); 
          S[RR_node] = true;
-         maxinf.push_back(RR_expect*1.0/MCROUNDS);
+         if(calcu == "min"){
+            maxinf.push_back(RR_expect*1.0/MCROUNDS);
+         }
+         if(calcu == "sum"){
+            maxinf.push_back(RR_sum*1.0/MCROUNDS);
+         }
+
          RRselectCount++;
       }
       // break;
@@ -2620,7 +2708,7 @@ values tSuper(InfGraph g, int k, int MCROUNDS, double epsilon, string model){
    // res.sed = ;
    // res.inf = maxinf;
    // res.time = times;
-   printf("Myopic using %d times, RR using %d times\n",myselectCount,RRselectCount);
+   // printf("Myopic using %d times, RR using %d times\n",myselectCount,RRselectCount);
    return res;
 
 }
@@ -2672,7 +2760,7 @@ pair<int,int> lsGreedy(InfGraph g, int MCROUNDS, set<int> s, string model){
 }
 
 
-pair<int,int> addGreedy(InfGraph g, int MCROUNDS, set<int> s, string model){
+pair<int,int> addGreedy_old(InfGraph g, int MCROUNDS, set<int> s, string model){
    set<int> restSet,G;
    queue<int> qAdd;
    int* counter;
@@ -2733,8 +2821,74 @@ pair<int,int> addGreedy(InfGraph g, int MCROUNDS, set<int> s, string model){
    }
    printf("we are adding node %d, with %d min expectation\n", node, max);
    return make_pair(node,max);
-
 }
+
+summary addGreedy(InfGraph g, int MCROUNDS, set<int> s, string model){
+   set<int> restSet,G;
+   queue<int> qAdd;
+   int* counter;
+   set<int, greater<int> >::iterator i;
+   set<int, greater<int>>::iterator j;
+   int add_node, min_expect, sum_inf, max;
+   // double min_expect;
+   // orgSet = s;
+   int node;
+   // double max = 0;
+
+
+   for(int nodes=0; nodes<g.numVert; nodes++){
+      G.insert(nodes);
+   }
+   
+   // printf("seed set as :");
+   // for(i = s.begin(); i!=s.end(); i++){
+   //    // cout<< *i<< " ";
+   // }
+   // cout<<endl;
+
+   set_difference(G.begin(),G.end(),s.begin(),s.end(),inserter(restSet,restSet.begin()));
+
+   // printf("rest node as :");
+   // for(i = restSet.begin(); i!=restSet.end(); i++){
+   //    cout<< *i<< " ";
+   // }
+   // cout<<endl;
+   for(i = restSet.begin(); i!=restSet.end(); i++){
+      // if(*i%20==0){
+      //    printf("%d",*i);
+      // }
+      add_node = *i;
+      s.insert(add_node);
+
+      for(j = s.begin();j!=s.end();j++){
+         qAdd.push(*j);
+      }
+      if(model == "lt")
+         counter = ltExp(g, qAdd, MCROUNDS);
+      if(model == "ic")
+         counter = icExp_lazyI(g, qAdd, MCROUNDS);
+      // qAdd.pop();
+      min_expect = *min_element(counter+0,counter+g.numVert);
+      // printf("%d ", min_expect);
+      while(!qAdd.empty()){
+         qAdd.pop();
+      }
+      if (min_expect>=max){
+         node = *i;
+         max = min_expect;
+         sum_inf = std::accumulate(counter+0, counter+g.numVert,0);
+      }
+      // free(counter);
+      s.erase(add_node);
+
+      // orgSet.insert(remove_node);
+   }
+   printf("we are adding node %d, with %d min expectation\n", node, max);
+   summary res ={node, max, sum_inf};
+   // make_pair(node,max);
+   return res;
+}
+
 values rselectLs(InfGraph g, int k, int MCROUNDS, double EPSILON, string model,int step){
    bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
    bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
@@ -2932,7 +3086,7 @@ values rgselectLs(InfGraph g, int k, int MCROUNDS, double EPSILON, string model,
    vector<double> inf;
    vector<double>  tim;
    queue<int> targets,s;
-   int replace_node, add_node, previous_node, min_expect, add_expect;
+   int replace_node, add_node, min_expect, add_expect; //,previous_node
    set<int> sets;
    pair<int,int> ls_candi,lg_candi;
    double loop_size;
@@ -3010,7 +3164,7 @@ values rgselectLs(InfGraph g, int k, int MCROUNDS, double EPSILON, string model,
          S[replace_node] = false;
 
 
-         lg_candi = addGreedy(g, MCROUNDS, sets, model);
+         lg_candi = addGreedy_old(g, MCROUNDS, sets, model);
          add_node = lg_candi.first;
          add_expect = lg_candi.second;
 
@@ -3077,11 +3231,12 @@ values rgselectLs(InfGraph g, int k, int MCROUNDS, double EPSILON, string model,
 }
 
 
-pair<int,int> replaceGreedy(InfGraph g, queue<int> s,int MCROUNDS,string model){
+summary replaceGreedy(InfGraph g, queue<int> s,int MCROUNDS,string model){
    set<int> sets;
    int seed;
-   pair<int,int> ls_candi,lg_candi;
-   int min_expect,replace_node,add_node,add_expect,node,expect;
+   pair<int,int> ls_candi;//,lg_candi;
+   summary lg_candi;
+   int min_expect,replace_node,add_node,add_expect,node,expect,sum_inf;
    int* counter;
    int ls_times;
 	MCROUNDS = MCROUNDS * 10;
@@ -3100,6 +3255,7 @@ pair<int,int> replaceGreedy(InfGraph g, queue<int> s,int MCROUNDS,string model){
    }
    printf("expectation before is %d\n",min_expect);
    expect = min_expect;
+   sum_inf = std::accumulate(counter+0,counter+g.numVert,0);
    free(counter);
 /*   */
    ls_times = 0;
@@ -3115,14 +3271,15 @@ pair<int,int> replaceGreedy(InfGraph g, queue<int> s,int MCROUNDS,string model){
       sets.erase(replace_node);
 
       lg_candi = addGreedy(g, MCROUNDS, sets, model);
-      add_node = lg_candi.first;
-      add_expect = lg_candi.second;
+      add_node = lg_candi.node;
+      add_expect = lg_candi.min;
 
       if(add_expect>expect){
          printf("%d is larger than %d, node %d has been add\n",add_expect, expect,add_node);
          node = add_node;
          sets.insert(add_node);
          expect = add_expect;
+         sum_inf = lg_candi.sum;
       }
       else{
          printf("keep previous node\n");
@@ -3133,10 +3290,12 @@ pair<int,int> replaceGreedy(InfGraph g, queue<int> s,int MCROUNDS,string model){
    }while(node!=replace_node);
 
    printf("add node %d with expect %d\n",node,expect);
-   return make_pair(node, expect);
+   summary res = {node, expect, sum_inf};
+   // make_pair(node, expect)
+   return res;
 }
 
-values lSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
+values lSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model,string calcu){
    bool *S = (bool*)malloc(sizeof(bool)*g.numVert);
    bool *T = (bool*)malloc(sizeof(bool)*g.numVert);
    clock_t start_t, end_t;
@@ -3217,24 +3376,31 @@ values lSelect(InfGraph g, int k, int MCROUNDS, double EPSILON, string model){
    queue<int> RR_selet;
    vector<int> seed;
    vector<double> timevec;
-   pair<int,int> lsres;
+   // pair<int,int> lsres;
+   summary lsres;
    printf("finish RR selection\n");
+   int sum_inf;
    for(int i=0;i<k;i++){
       RR_selet.push(Q[i]);
-
       if(i%10 == 0){
          start_t = clock();
          printf("\nwe are in sepcial budget %d: \n",i);
          lsres = replaceGreedy(g, RR_selet, MCROUNDS,model);
-         double expect = lsres.second;
-         min_expect = lsres.second*0.1/MCROUNDS;
-         printf("min expectation is %f\n",min_expect);
+         // double expect = lsres.min;
+         min_expect = lsres.min*0.1/MCROUNDS;
+         sum_inf = lsres.sum;
+         // printf("min expectation is %f\n",min_expect);
 
          end_t = clock();
          duration = (double)(end_t -start_t)/CLOCKS_PER_SEC;
          
-         seed.push_back(lsres.first);
-         inf.push_back(min_expect);
+         seed.push_back(lsres.node);
+         if(calcu == "min"){
+            inf.push_back(min_expect);
+         }
+         if(calcu == "sum"){
+            inf.push_back(sum_inf*0.1/MCROUNDS);
+         }
          timevec.push_back(tim[i]+duration);
       }
       else{

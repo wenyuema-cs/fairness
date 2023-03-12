@@ -34,14 +34,15 @@ int main(int argc, char *argv[])
    string dataset =argv[5];
    int SAMPLE_ROUND = atoi(argv[6]);
    double ALPHA = atof(argv[7]);
-   int TEST = atoi(argv[8]);;
+   int TEST = atoi(argv[8]);
    string model = argv[9];
+   string calcu = argv[10];
    int step = 20 ;
 
    //inPut in ={in.BUDGET =BUDGET,in.MCROUNDS= MCROUNDS, in.EPSILON = EPSILON,in.dataset = dataset, in.SAMPLE_ROUND= SAMPLE_ROUND};
-   inPut in ={.BUDGET =BUDGET,.MCROUNDS= MCROUNDS, .EPSILON = EPSILON,.dataset = dataset, .SAMPLE_ROUND= SAMPLE_ROUND, .ALPHA = ALPHA, .TEST =TEST, .MODEL = model};
-   cout<<"method: "<<method<<" "<<endl;
-   cout<<"BUDGET: "<<BUDGET<<" "<<MCROUNDS<<" " <<EPSILON <<" "<< dataset<<" "  <<SAMPLE_ROUND<<" " <<endl;
+   inPut in ={.BUDGET =BUDGET,.MCROUNDS= MCROUNDS, .EPSILON = EPSILON,.dataset = dataset, .SAMPLE_ROUND= SAMPLE_ROUND, .ALPHA = ALPHA, .TEST =TEST, .MODEL = model, .CAL = calcu};
+   cout<<"Method: "<<method<<" Objective: "<< calcu<<endl;
+   cout<<"Budget: "<<BUDGET<<" "<<MCROUNDS<<" " <<EPSILON <<" "<< dataset<<" "  <<SAMPLE_ROUND<<" " <<endl;
    cout<<"influence model: "<< model<<endl;
    cout<<"internal step: "<<to_string(step)<<endl;
    
@@ -73,7 +74,7 @@ int main(int argc, char *argv[])
 
       
       if(method.compare("greedy")==0){
-         res = greedy(g, in.BUDGET, in.MCROUNDS, in.EPSILON,in.MODEL);
+         res = greedy(g, in.BUDGET, in.MCROUNDS, in.EPSILON,in.MODEL,in.CAL);
          // res = greedy_hyper(g,  in.BUDGET, in.MCROUNDS, in.EPSILON);
 
          // logRec(g,res, in, method);
@@ -87,13 +88,13 @@ int main(int argc, char *argv[])
       }
 
       if(method.compare("sRR")==0){
-         res = rSelect(g, BUDGET,MCROUNDS, EPSILON, in.MODEL);
+         res = rSelect(g, BUDGET,MCROUNDS, EPSILON, in.MODEL,in.CAL);
       }
       if(method.compare("pRR")==0){
          res = rpSelect(g, BUDGET,MCROUNDS, EPSILON);
       }
       if(method.compare("tRR")==0){
-         res = rtieSelect(g, BUDGET, MCROUNDS, EPSILON, in.MODEL);
+         res = rtieSelect(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,in.CAL);
       }
 
       if(method.compare("lsRR")==0){
@@ -105,17 +106,17 @@ int main(int argc, char *argv[])
       }
 
       if(method.compare("lRR")==0){
-         res = lSelect(g, BUDGET, MCROUNDS, EPSILON, in.MODEL);
+         res = lSelect(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,in.CAL);
       }
 
       if(method.compare("supers")==0){
-         res = sSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
+         res = sSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL,in.CAL);
       }
       // if(method.compare("superp")==0){
       //    res = pSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
       // }
       if(method.compare("supert")==0){
-         res = tSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
+         res = tSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL,in.CAL);
       }
 
       if(method.compare("RR_hyper")==0){
@@ -138,7 +139,7 @@ int main(int argc, char *argv[])
       }   
       
       if(method.compare("myopic")==0){
-         res = myOpic(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL);
+         res = myOpic(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL, in.CAL);
          // res = myOpic_trick(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
          // res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
          // logRec(g, res, in, method);
@@ -169,7 +170,7 @@ int main(int argc, char *argv[])
       time[j] = time[j]*1.0/TEST;
    }
    values avg_res = {res.sed,influence,time};
-   logRec(g,avg_res, in, method);
+   logRec(g,avg_res, in, method, calcu);
    
 
    /*   

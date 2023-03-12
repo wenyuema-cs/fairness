@@ -7,7 +7,7 @@ using namespace std;
 using namespace std :: chrono;
 
 
-void logRec(Graph g, values res, inPut in, string method){
+void logRec(Graph g, values res, inPut in, string method, string calcu){
 // void logRec(Graph g, values res, inPut in, string method){
    ofstream outfile ("log/log_"+method+".txt",ios::app);
    auto timenow = chrono::system_clock::to_time_t(chrono::system_clock::now());
@@ -59,7 +59,7 @@ void logRec(Graph g, values res, inPut in, string method){
    // char fb = 'facebook';
    // char bitcoin = 'bitcoin';
 
-   string logfile = "log/"+to_string(in.EPSILON)+"/";
+   string logfile = "log/"+in.CAL+"/"+to_string(in.EPSILON)+"/";
    cout<<"output file: "<< logfile<<endl;
    std::ofstream myfile;
    if((method.compare("lgRR")==0) || (method.compare("lsRR")==0)){
