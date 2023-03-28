@@ -5,6 +5,8 @@
 #include <vector>
 #include <time.h>
 #include <cmath>
+// #include <numeric>
+
 #include "log.h"
 
 using namespace std;
@@ -72,9 +74,10 @@ int main(){
     int MC = 1000;
     int BUDGET = 109;
     double EPSILON = 0.01;
-    int TEST = 10;
+    int TEST = 2;
     string method = "myopic_python";
-    inPut in ={.BUDGET =BUDGET,.MCROUNDS= MC, .EPSILON = EPSILON,.dataset = "star", .SAMPLE_ROUND= 100, .ALPHA = 0.1};
+    string calcu = "sum";
+    inPut in ={.BUDGET =BUDGET,.MCROUNDS= MC, .EPSILON = EPSILON,.dataset = "star", .SAMPLE_ROUND= 100, .ALPHA = 0.1, .TEST =TEST, .MODEL = "ic", .CAL = calcu};
     vector <double> influence(BUDGET);
     // int *counter = (int*)malloc(sizeof(int)*g.numVert);
     queue<int> s;
@@ -93,12 +96,13 @@ int main(){
     for(int i=0;i<100;i++){
         int name = randx();
         double fix = randam();
-        printf("name is: %d ",name);
-        printf( "fix is %f\n",fix);
+        // printf("name is: %d ",name);
+        // printf( "fix is %f\n",fix);
     }
     
     double sprd;
-    
+    double sum_inf=0;
+    double min_expect;
     for(int i = 1;i<TEST;i++){
         for(int i=0;i<star1000_seed.size();i++){
             int node = star1000_seed[i];
@@ -117,11 +121,21 @@ int main(){
             //     }
 
             // }
+            if(calcu == "min")
+                printf("calcu is min here!");
+                min_expect = *min_element(counter+0, counter+g.numVert);
+                // min_expect = min_expect*1.0/MC;
+                maxinf.push_back(min_expect*1.0/MC);
             
-            double min_expect = *min_element(counter+0, counter+g.numVert);
-            min_expect = min_expect*1.0/MC;
-
-            maxinf.push_back(min_expect);
+            double sum_inf2=0; 
+            if(calcu == "sum")
+                for(int j = 0;j<g.numVert;j++){
+                    // cout<<counter[j]<<" ";
+                    sum_inf2+=counter[j];
+                }
+                sum_inf = std::accumulate(counter+0, counter+g.numVert,0);
+                // printf("sum in %d is %f or %f\n", i,sum_inf,sum_inf2);
+                maxinf.push_back(sum_inf);
             // printf("selecting node %d with %f influence\n", i, min_expect);
             // float* counter = icExp_hyperG(g, myopic_py_select, MC);
             // double min = *min_element(counter+0,counter+g.numVert);
@@ -143,7 +157,7 @@ int main(){
         // time[j] = time[j]*1.0/TEST;
     }
     values res ={star1000_seed,influence,tim};
-    logRec(g, res, in, method);
+    logRec(g, res, in, method, calcu);
     /**/
     
 }

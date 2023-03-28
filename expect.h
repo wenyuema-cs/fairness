@@ -28,7 +28,7 @@ double randam(){
 
 
 
-pair<double,int> icExp(Graph g, queue<int> s,int mc,double epsilon){
+summary icExp(Graph g, queue<int> s,int mc,double epsilon){
    int counter [g.numVert];
    for (int i =0;i<g.numVert;i++){
       counter[i]=0;
@@ -86,6 +86,7 @@ pair<double,int> icExp(Graph g, queue<int> s,int mc,double epsilon){
    // cout<<endl;
    // cout<<"-------------Counter end-------------------------"<<endl;
    int min_expect = *min_element(counter+0, counter+g.numVert);
+   int sum_inf = std::accumulate(counter+0, counter+g.numVert,0);
    //cout << "min expected is "<<min_expect<<" in set" <<endl;
    int num = 0;
    //cout<<"after mc:"<<endl;
@@ -98,12 +99,13 @@ pair<double,int> icExp(Graph g, queue<int> s,int mc,double epsilon){
    }
    // cout << endl;
    //vector<int> sort_counter = sort_indexes(counter);
-   double min = min_expect*1.0/mc;
+   // double min = min_expect*1.0/mc;
    //cout<<"min: "<<min<<endl;
-   return make_pair(min, num);
+   summary res ={num, min_expect, sum_inf};
+   return res;
 }
 
-pair<double, int> ltExpg(Graph g, queue<int> s,int mc,double epsilon){
+summary ltExpg(Graph g, queue<int> s,int mc,double epsilon){
 
    int *counter = (int*)malloc(sizeof(int)*g.numVert);
    // srand (time(NULL));
@@ -129,7 +131,7 @@ pair<double, int> ltExpg(Graph g, queue<int> s,int mc,double epsilon){
       // cout<<endl;
       // printf("does node 499 been activate: %d", g.act[499]);
       queue<int> ss=s;
-      double sum;
+      // double sum;
       while(!ss.empty()){
          //cout<<"=========================================================="<<endl;
          int candi = ss.front(); 
@@ -163,6 +165,8 @@ pair<double, int> ltExpg(Graph g, queue<int> s,int mc,double epsilon){
    }
 
    int min_expect = *min_element(counter+0, counter+g.numVert);
+   int sum_inf = std::accumulate(counter+0, counter+g.numVert,0);
+
    int num=0;
 
    for(int count = 0; count<g.numVert;count++){
@@ -178,7 +182,8 @@ pair<double, int> ltExpg(Graph g, queue<int> s,int mc,double epsilon){
    // cout<<endl;
 
    double min = min_expect*1.0/mc;
-   return make_pair(min,num);
+   summary res = {num, min_expect, sum_inf};
+   return res;
 }
 float* icExp_lazy(Graph g, queue<int> s,int mc){ //, double alpha
 
@@ -365,7 +370,7 @@ int* ltExp(Graph g, queue<int> s,int mc){ //, double alpha
       // cout<<endl;
       // printf("does node 499 been activate: %d", g.act[499]);
       queue<int> ss=s;
-      double sum;
+      // double sum;
       while(!ss.empty()){
          //cout<<"=========================================================="<<endl;
          int candi = ss.front(); 
@@ -405,6 +410,9 @@ int* ltExp(Graph g, queue<int> s,int mc){ //, double alpha
    return counter;
 }
 
+
+/*
+// for paralla program
 int* icExp_lazycon(Graph g, queue<int> s,int mc){ //, double alpha
 
    srand (time(NULL));
@@ -494,8 +502,10 @@ int* icExp_lazycon(Graph g, queue<int> s,int mc){ //, double alpha
    // }
    // cout << endl;
    // free(counter);
-   return counter;
-}
+   //return counter;
+//}
+
+
 
 
 float* icExp_hyper(InfGraph g, queue<int> s, int mc){

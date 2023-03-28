@@ -29,6 +29,14 @@ struct values
    vector<double> time;
 };
 
+struct summary
+{
+   int node;
+   int min;
+   int sum;
+   // vector<double> inf;
+};
+
 static unsigned long int num = 1;
 int randx(void) // RAND_MAX assumed to be 32767
 {
@@ -51,6 +59,7 @@ struct inPut{
    double ALPHA;
    int TEST;
    string MODEL;
+   string CAL;
 };
 
 
