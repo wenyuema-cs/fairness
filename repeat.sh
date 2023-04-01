@@ -10,6 +10,7 @@ npArray=("graph_spa_500_0_np" "graph_spa_500_10_np")
 idpArray=("graph_spa_500_0_idp" "graph_spa_500_10_idp")
 lostArray=("graph_spa_500_10_tp" "graph_spa_500_0_idp" "graph_spa_500_10_idp")
 spa10=("graph_spa_500_10_xp" "graph_spa_500_10_tp" "graph_spa_500_10_thp" "graph_spa_500_10_hp" "graph_spa_500_10_np" "graph_spa_500_10_idp")
+spa10_t=("graph_spa_500_10_xp" "graph_spa_500_10_tp" "graph_spa_500_10_thp")
 spa10_h=("graph_spa_500_10_hp" "graph_spa_500_10_np" "graph_spa_500_10_idp")
 
 # ./run lRR 251 10000 0.02 graph_spa_500_0_xp 10000 0.1 10 lt sum
@@ -211,11 +212,24 @@ spa10_h=("graph_spa_500_10_hp" "graph_spa_500_10_np" "graph_spa_500_10_idp")
 #   ./run lRR 251 1000 0.02 $str 10000 0.1 10 lt sum
 # done
 
+# for str in ${spa10_h[@]}; do
+#   ./run greedy 81 10000 0.02 $str 10000 0.1 10 ic sum
+# done
 
-for str in ${spa10_h[@]}; do
-  ./run lRR 151 1000 0.02 $str 10000 0.1 10 lt sum
-  ./run greedy 151 10000 0.02 $str 10000 0.1 10 lt sum
+for str in ${spa10_t[@]}; do
+  ./run greedy 151 10000 0.02 $str 10000 0.1 10 ic sum
 done
+
+# for str in ${spa10_h[@]}; do
+#   ./run lRR 151 1000 0.02 $str 10000 0.1 10 lt sum
+#   ./run greedy 151 10000 0.02 $str 10000 0.1 10 lt sum
+# done
+
+# ./run lRR 151 1000 0.02 graph_spa_500_10_hp 10000 0.1 10 lt sum
+# ./run lRR 151 1000 0.02 graph_spa_500_10_idp 10000 0.1 10 lt sum
+# ./run greedy 151 10000 0.02 graph_spa_500_10_idp 10000 0.1 10 lt sum
+# ./run lRR 151 10000 0.02 graph_spa_500_10_np 10000 0.1 10 lt sum
+
 
 methodsArray=("sRR" "tRR" "myopic")
 lRRArray=("lRR")
