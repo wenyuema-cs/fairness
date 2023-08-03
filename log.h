@@ -69,9 +69,9 @@ void logRec(Graph g, values res, inPut in, string method, string calcu){
       myfile.open (logfile+in.MODEL+"_"+in.dataset+"_"+method+".csv");
    }
    myfile << "k;seed;inf;tim\n";
-   if ((in.dataset.find(sp) != string::npos ))
+   if ((in.dataset.find(sp) != string::npos )&& (method.compare("saturate")!=0))
    {
-   //   cout<<"Yes, string contains the character - "<< endl;
+     cout<<"Yes, string contains the character - "<< endl;
    for(int i = 0;i<in.BUDGET;i++){
       if(i%10==0){
          myfile << to_string(i)+";"+to_string(res.sed[i])+";"+to_string(res.inf[i])+";"+to_string(res.time[i])+"\n";
@@ -79,6 +79,14 @@ void logRec(Graph g, values res, inPut in, string method, string calcu){
       
    } 
    
+   }
+   if((method.compare("saturate")==0)){
+      int rounds = int(in.BUDGET)/10;
+      for(int i = 1;i<=rounds;i++){
+         myfile << to_string(i*10)+"; ;"+to_string(res.inf[i-1])+";"+to_string(res.time[i-1])+"\n";
+         
+         
+      } 
    }
    else
    {

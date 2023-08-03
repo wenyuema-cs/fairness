@@ -48,28 +48,35 @@ int main(int argc, char *argv[])
    
    InfGraph g = buildGraph(dataset);
 
+   
    vector <double> influence(BUDGET);
    vector <double> time(BUDGET);
+   
+
+   if(method.compare("saturate")==0){
+      vector <double> influence(BUDGET/10);
+      vector <double> time(BUDGET/10);
+   }
    values res;
+   // int rounds = in.BUDGET/10;
+/**/
 
+   for(int test = 1; test<=TEST; test++){
+      
+  
 
-   for(int test = 1;test<=TEST;test++){
-      /* */
+      cout<<"I'm difinitly here start testing"<<endl;
       // test of abnormal nodes
       // Graph g = moveIso(og);
-      
-      
-      /*
+  
       // test of icExp
 
-      queue<int> select;
-      select.push(3);
-      select.push(2); 
+      // queue<int> select;
+      // select.push(3);
+      // select.push(2); 
       
-      pair<int,int> res=icExp(g,select,100,0);
-      */
+      // pair<int,int> res=icExp(g,select,100,0);
 
-      /* */
       // test of greedy
 
       
@@ -80,30 +87,34 @@ int main(int argc, char *argv[])
          // logRec(g,res, in, method);
       }
 
-      // test of RR
-      if(method.compare("RR")==0){
-         res = rrSelect(g , BUDGET,MCROUNDS, EPSILON);
-         // res = rbfsSelect(g , BUDGET,MCROUNDS, EPSILON);
-         
+      if(method.compare("saturate")==0){
+         res = saturate(g, in.MCROUNDS, in.BUDGET, in.MODEL, in.CAL);
       }
+
+      // test of RR
+      // if(method.compare("RR")==0){
+      //    res = rrSelect(g , BUDGET,MCROUNDS, EPSILON);
+      //    // res = rbfsSelect(g , BUDGET,MCROUNDS, EPSILON);
+         
+      // }
 
       if(method.compare("sRR")==0){
          res = rSelect(g, BUDGET,MCROUNDS, EPSILON, in.MODEL,in.CAL);
       }
-      if(method.compare("pRR")==0){
-         res = rpSelect(g, BUDGET,MCROUNDS, EPSILON);
-      }
+      // if(method.compare("pRR")==0){
+      //    res = rpSelect(g, BUDGET,MCROUNDS, EPSILON);
+      // }
       if(method.compare("tRR")==0){
          res = rtieSelect(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,in.CAL);
       }
 
-      if(method.compare("lsRR")==0){
-         res = rselectLs(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,step);
-      }
+      // if(method.compare("lsRR")==0){
+      //    res = rselectLs(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,step);
+      // }
 
-      if(method.compare("lgRR")==0){
-         res = rgselectLs(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,step);
-      }
+      // if(method.compare("lgRR")==0){
+      //    res = rgselectLs(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,step);
+      // }
 
       if(method.compare("lRR")==0){
          res = lSelect(g, BUDGET, MCROUNDS, EPSILON, in.MODEL,in.CAL);
@@ -119,24 +130,24 @@ int main(int argc, char *argv[])
          res = tSuper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL,in.CAL);
       }
 
-      if(method.compare("RR_hyper")==0){
-         g.init_hyper_graph();
-         g.build_hyper_graph_r(MCROUNDS);
-         res = rrSelect_hyper(g , BUDGET,MCROUNDS, EPSILON); 
-      }
+      // if(method.compare("RR_hyper")==0){
+      //    g.init_hyper_graph();
+      //    g.build_hyper_graph_r(MCROUNDS);
+      //    res = rrSelect_hyper(g , BUDGET,MCROUNDS, EPSILON); 
+      // }
 
       // test of lazygreedy
-      if(method.compare("lazygreedy")==0){
-         // res = lazyGreedy(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.ALPHA);
-         res = lazy_hyper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.ALPHA);
-         // logRec(g, res, in, method);
-      }
+      // if(method.compare("lazygreedy")==0){
+      //    // res = lazyGreedy(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.ALPHA);
+      //    res = lazy_hyper(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.ALPHA);
+      //    // logRec(g, res, in, method);
+      // }
       
       // test of count
-      if(method.compare("count")==0){
-         res = count(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.ALPHA);
-         // logRec(g, res, in, method);
-      }   
+      // if(method.compare("count")==0){
+      //    res = count(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.ALPHA);
+      //    // logRec(g, res, in, method);
+      // }   
       
       if(method.compare("myopic")==0){
          res = myOpic(g, in.BUDGET, in.MCROUNDS, in.EPSILON, in.MODEL, in.CAL);
@@ -145,18 +156,18 @@ int main(int argc, char *argv[])
          // logRec(g, res, in, method);
       }
 
-      if(method.compare("myopic_hyper")==0){
-         g.init_hyper_graph();
-         g.build_hyper_graph_r(MCROUNDS);
-         res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
-      }      
-      if(method.compare("superR")==0){
-         res = super(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
-      }
+      // if(method.compare("myopic_hyper")==0){
+      //    g.init_hyper_graph();
+      //    g.build_hyper_graph_r(MCROUNDS);
+      //    res = myOpic_hyper(g, in.BUDGET, in.MCROUNDS);
+      // }      
+      // if(method.compare("superR")==0){
+      //    res = super(g, in.BUDGET, in.MCROUNDS, in.EPSILON);
+      // }
 
 
 
-      for(int j = 0;j<BUDGET;j++){
+      for(int j = 0;j<res.inf.size();j++){
          double spread = res.inf[j];
          double clock = res.time[j];
          
@@ -164,12 +175,34 @@ int main(int argc, char *argv[])
          time[j] += clock;
       }  
       printf("we've finished %d round test\n",test);
+   
+      cout<<"what in influence: ";
+      for(const auto& i: influence){
+         cout<<i<<" ";
+      }
+      cout<<endl;
+      cout<<"what in time: ";
+      for(const auto& i: time){
+         cout<<i<<" ";
+      }
+      cout<<endl;
    }
-   for(int j = 0;j<BUDGET;j++){
+   
+   for(int j = 0;j<res.inf.size();j++){
       influence[j] = influence[j]*1.0/TEST;
       time[j] = time[j]*1.0/TEST;
    }
    values avg_res = {res.sed,influence,time};
+   cout<<"what in influence: ";
+   for(const auto& i: influence){
+      cout<<i;
+   }
+   cout<<endl;
+   cout<<"what in time: ";
+   for(const auto& i: time){
+      cout<<i;
+   }
+   cout<<endl;
    logRec(g,avg_res, in, method, calcu);
    
 

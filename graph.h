@@ -37,6 +37,15 @@ struct summary
    // vector<double> inf;
 };
 
+struct gpcpack
+{
+   set<int> seed;
+   double gpc_summin;
+   int min;
+   int sum;
+   // vector<double> inf;
+};
+
 static unsigned long int num = 1;
 int randx(void) // RAND_MAX assumed to be 32767
 {
