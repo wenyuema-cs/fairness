@@ -129,6 +129,129 @@ values greedy(Graph g, int k, int mc, double epsilon, string model, string calcu
    return res_log;
 }
 
+
+gpcpack gpc(Graph g, int mc, double cost, string model){
+
+   set<int> S, G;
+   queue<int> s;
+   cost = cost*mc;
+   int* counter = (int*)malloc(sizeof(int));
+   for(int i=0; i<g.numVert;i++){
+      G.insert(i);
+   }
+   // cout<<endl;
+   int node = -1;
+   int min_expect,sum_inf;
+   double gpc_summin;
+
+   while(gpc_summin<cost){
+      double max_ = 0;
+      set<int, greater<int> >::iterator i;
+      set<int, greater<int> >::iterator j;
+      queue<int> QueueS;
+      for (i = S.begin(); i != S.end(); i++){
+         // G.erase(*i);
+         
+         QueueS.push(*i);
+      }
+      
+      for (j = G.begin(); j != G.end(); j++) {
+         s=QueueS;
+         s.push(*j);
+         //cout<<"search max with node:"<<*j<<endl;
+      
+         if(model == "lt")
+            counter = ltExp(g, s, mc);
+         if(model == "ic")
+            counter = icExp_lazyI(g, s, mc);
+      
+         for(int i=0;i<g.numVert;i++){
+            if(counter[i]<cost){
+               gpc_summin += counter[i];
+            }
+            else{
+               gpc_summin += cost;
+            }
+            
+         }
+         if(gpc_summin >=max_){
+            node = *j;
+            max_ = gpc_summin;
+            
+            min_expect = *min_element(counter+0, counter+g.numVert);
+            sum_inf = std::accumulate(counter+0, counter+g.numVert,0);
+
+         }
+      }
+
+      G.erase(node);
+      S.insert(node);
+
+   }
+   // printf("finish selecting seed\n");
+   free(counter);
+   gpcpack result={S,gpc_summin, min_expect,sum_inf};
+   return result;
+}
+
+values saturate(Graph g, int mc, int k_total, string model, string calcu){
+   clock_t start_t, end_t;
+   double duration;
+
+   vector<int> Q;
+   vector<double> inf, tim;
+   double cost ;
+   // = 1/g.numVert;
+
+   int inf_min,inf_sum;
+   gpcpack selection;
+   set<int> seed,s;
+   double max;
+   int k=10;
+   cout<<"I'm in saturate"<<endl;
+   
+   while(k <= k_total)
+   {
+      
+      cout<< "Now k = "<<k<<endl;
+      start_t = clock();
+      double c_max = 1;
+      double c_min = 0;
+      while ((c_max - c_min) >= 1.0/g.numVert)
+      {
+         // cout<<(c_max - c_min)<<" "<< c_max<<" "<< c_min<<" "<<cost<<endl;
+         cost = (c_max + c_min) / 2;
+         selection = gpc(g, mc, cost, model);
+         s = selection.seed;
+         if(s.size() >  k){
+            c_max = cost;
+         }else{
+            c_min = cost;
+            seed = s;
+            inf_min = selection.min;
+            inf_sum = selection.sum;
+         }
+      }
+   
+      end_t = clock();
+      duration = (double)(end_t - start_t)/ CLOCKS_PER_SEC;
+      if(calcu == "min"){
+         cout<<"min expect in gpc: "<<inf_min*1.0/mc<<" with "<<s.size()<<endl;
+         inf.push_back(inf_min*1.0/mc);
+      }
+      if(calcu == "sum"){
+         cout<<"sum expect in gpc: "<<inf_sum*1.0/mc<<" with "<<s.size()<<endl;
+         inf.push_back(inf_sum*1.0/mc);
+      }
+      tim.push_back(duration);
+      k += 10;
+   }
+   cout<<endl;
+   values res_log ={Q,inf,tim};
+   return res_log;
+}
+
+
 values greedy_hyper(InfGraph g, int k, int mc, double epsilon){
    clock_t start_t, end_t;
    double duration;
