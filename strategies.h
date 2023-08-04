@@ -131,10 +131,11 @@ values greedy(Graph g, int k, int mc, double epsilon, string model, string calcu
 
 
 gpcpack gpc(Graph g, int mc, double cost, string model){
-
+   cout<<"I'm in gpc";
    set<int> S, G;
    queue<int> s;
-   cost = cost*mc;
+   int cost_mc = cost*mc*g.numVert;
+   cout<<"cost_mc:"<<cost_mc<<endl;
    int* counter = (int*)malloc(sizeof(int));
    for(int i=0; i<g.numVert;i++){
       G.insert(i);
@@ -142,10 +143,11 @@ gpcpack gpc(Graph g, int mc, double cost, string model){
    // cout<<endl;
    int node = -1;
    int min_expect,sum_inf;
-   double gpc_summin;
+   double gpc_summin=0;
+   double max_ = 0;
 
-   while(gpc_summin<cost){
-      double max_ = 0;
+   while(max_<cost_mc){
+      max_ = 0;
       set<int, greater<int> >::iterator i;
       set<int, greater<int> >::iterator j;
       queue<int> QueueS;
@@ -156,6 +158,7 @@ gpcpack gpc(Graph g, int mc, double cost, string model){
       }
       
       for (j = G.begin(); j != G.end(); j++) {
+         gpc_summin=0;
          s=QueueS;
          s.push(*j);
          //cout<<"search max with node:"<<*j<<endl;
@@ -164,16 +167,24 @@ gpcpack gpc(Graph g, int mc, double cost, string model){
             counter = ltExp(g, s, mc);
          if(model == "ic")
             counter = icExp_lazyI(g, s, mc);
-      
+         // cout<<"mc: ";
+         // for(const auto& count : counter){
+         //    cout<<count<<" ";
+         // }
+         // cout<<endl;
+
          for(int i=0;i<g.numVert;i++){
-            if(counter[i]<cost){
-               gpc_summin += counter[i];
+            // cout<<gpc_summin<<" ";
+            if(counter[i]<cost_mc){
+               gpc_summin = gpc_summin+ counter[i];
             }
             else{
-               gpc_summin += cost;
+               gpc_summin = gpc_summin+ cost_mc;
             }
             
          }
+
+         // cout<<endl;
          if(gpc_summin >=max_){
             node = *j;
             max_ = gpc_summin;
@@ -183,14 +194,14 @@ gpcpack gpc(Graph g, int mc, double cost, string model){
 
          }
       }
-
       G.erase(node);
       S.insert(node);
 
    }
    // printf("finish selecting seed\n");
    free(counter);
-   gpcpack result={S,gpc_summin, min_expect,sum_inf};
+   cout<<"budget size: "<<S.size()<<" min="<<min_expect<<endl;
+   gpcpack result={S, max_/g.numVert ,min_expect ,sum_inf};
    return result;
 }
 
@@ -219,10 +230,11 @@ values saturate(Graph g, int mc, int k_total, string model, string calcu){
       double c_min = 0;
       while ((c_max - c_min) >= 1.0/g.numVert)
       {
-         // cout<<(c_max - c_min)<<" "<< c_max<<" "<< c_min<<" "<<cost<<endl;
+         cout<<"thershold,c_max,c_min:"<<(c_max - c_min)<<" "<< c_max<<" "<< c_min<<" "<<cost<<endl;
          cost = (c_max + c_min) / 2;
          selection = gpc(g, mc, cost, model);
          s = selection.seed;
+         cout<<"selected size: "<<s.size()<<" ";
          if(s.size() >  k){
             c_max = cost;
          }else{
@@ -232,19 +244,41 @@ values saturate(Graph g, int mc, int k_total, string model, string calcu){
             inf_sum = selection.sum;
          }
       }
+      cout<<endl;
    
       end_t = clock();
       duration = (double)(end_t - start_t)/ CLOCKS_PER_SEC;
+
+      int* counter = (int*)malloc(sizeof(int));
+      queue<int> QueueS;
+      set<int, greater<int> >::iterator i;
+      for (i = seed.begin(); i != seed.end(); i++){
+         QueueS.push(*i);
+      }
+
+      if(model == "lt")
+         counter = ltExp(g, QueueS, mc*100);
+      if(model == "ic")
+         counter = icExp_lazyI(g, QueueS, mc*100);
       if(calcu == "min"){
-         cout<<"min expect in gpc: "<<inf_min*1.0/mc<<" with "<<s.size()<<endl;
-         inf.push_back(inf_min*1.0/mc);
+         inf_min = *min_element(counter+0, counter+g.numVert);
+         cout<<"min expect in gpc: "<<(inf_min)*1.0/(mc*100)<<" with "<<s.size()<<endl;
+         inf.push_back(inf_min*1.0/(mc*100));
       }
       if(calcu == "sum"){
-         cout<<"sum expect in gpc: "<<inf_sum*1.0/mc<<" with "<<s.size()<<endl;
-         inf.push_back(inf_sum*1.0/mc);
+         inf_sum = std::accumulate(counter+0, counter+g.numVert,0); 
+         cout<<"sum expect in gpc: "<<(inf_sum*1.0)/(mc*100)<<" with "<<s.size()<<endl;
+         inf.push_back(inf_sum*1.0/(mc*100));
+      }
+      free(counter);
+      while (!QueueS.empty())
+      {
+         QueueS.pop();
       }
       tim.push_back(duration);
       k += 10;
+      cout<<"=========================="<<endl;
+      cout<<"while k = "<<k<<", min = "<<inf_min*1.0/mc<<endl;
    }
    cout<<endl;
    values res_log ={Q,inf,tim};
