@@ -88,7 +88,11 @@ int main(int argc, char *argv[])
       }
 
       if(method.compare("saturate")==0){
-         res = saturate(g, in.MCROUNDS, in.BUDGET, in.MODEL, in.CAL);
+         res = saturate(g, in.MCROUNDS,in.SAMPLE_ROUND, in.BUDGET, in.MODEL, in.CAL);
+      }
+
+      if(method.compare("random")==0){
+         res = random(g, in.MCROUNDS,in.SAMPLE_ROUND, in.BUDGET, in.MODEL, in.CAL);
       }
 
       // test of RR
