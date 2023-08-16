@@ -205,7 +205,8 @@ gpcpack gpc(Graph g, int mc, double cost, string model){
    return result;
 }
 
-values saturate(Graph g, int mc, int k_total, string model, string calcu){
+values saturate(Graph g, int mc, int sample_mc, int k_total, string model, string calcu){
+   // sample_mc = 100*mc
    clock_t start_t, end_t;
    double duration;
 
@@ -257,18 +258,18 @@ values saturate(Graph g, int mc, int k_total, string model, string calcu){
       }
 
       if(model == "lt")
-         counter = ltExp(g, QueueS, mc*100);
+         counter = ltExp(g, QueueS, sample_mc);
       if(model == "ic")
-         counter = icExp_lazyI(g, QueueS, mc*100);
+         counter = icExp_lazyI(g, QueueS, sample_mc);
       if(calcu == "min"){
          inf_min = *min_element(counter+0, counter+g.numVert);
-         cout<<"min expect in gpc: "<<(inf_min)*1.0/(mc*100)<<" with "<<s.size()<<endl;
-         inf.push_back(inf_min*1.0/(mc*100));
+         cout<<"min expect in gpc: "<<(inf_min)*1.0/(sample_mc)<<" with "<<s.size()<<endl;
+         inf.push_back(inf_min*1.0/(sample_mc));
       }
       if(calcu == "sum"){
          inf_sum = std::accumulate(counter+0, counter+g.numVert,0); 
-         cout<<"sum expect in gpc: "<<(inf_sum*1.0)/(mc*100)<<" with "<<s.size()<<endl;
-         inf.push_back(inf_sum*1.0/(mc*100));
+         cout<<"sum expect in gpc: "<<(inf_sum*1.0)/(sample_mc)<<" with "<<s.size()<<endl;
+         inf.push_back(inf_sum*1.0/(sample_mc));
       }
       free(counter);
       while (!QueueS.empty())
@@ -284,6 +285,80 @@ values saturate(Graph g, int mc, int k_total, string model, string calcu){
    values res_log ={Q,inf,tim};
    return res_log;
 }
+
+
+values random(Graph g, int mc, int sample_mc, int k_total, string model, string calcu){
+   // sample_mc = 100*mc
+   clock_t start_t, end_t;
+   double duration;
+
+   vector<int> Q;
+   vector<double> inf, tim;
+   double cost ;
+   // = 1/g.numVert;
+
+   int inf_min,inf_sum;
+   gpcpack selection;
+   int seed_node;
+   set<int> seed;
+   double max;
+   int k=10;
+   cout<<"I'm in saturate"<<endl;
+   seed_node = 0;
+   while(k <= k_total)
+   {
+      
+      cout<< "Now k = "<<k<<endl;
+      start_t = clock();
+      while(seed.size() <=  k){
+         seed_node = rand()%g.numVert;
+         if(seed.find(seed_node) != seed.end()){
+            break;
+         }else{
+            seed.insert(seed_node);
+         }
+      }
+
+   
+      end_t = clock();
+      duration = (double)(end_t - start_t)/ CLOCKS_PER_SEC;
+
+      int* counter = (int*)malloc(sizeof(int));
+      queue<int> QueueS;
+      set<int, greater<int> >::iterator i;
+      for (i = seed.begin(); i != seed.end(); i++){
+         QueueS.push(*i);
+      }
+
+      if(model == "lt")
+         counter = ltExp(g, QueueS, sample_mc);
+      if(model == "ic")
+         counter = icExp_lazyI(g, QueueS, sample_mc);
+      if(calcu == "min"){
+         inf_min = *min_element(counter+0, counter+g.numVert);
+         cout<<"min expect in gpc: "<<(inf_min)*1.0/(sample_mc)<<" with "<<seed.size()<<endl;
+         inf.push_back(inf_min*1.0/(sample_mc));
+      }
+      if(calcu == "sum"){
+         inf_sum = std::accumulate(counter+0, counter+g.numVert,0); 
+         cout<<"sum expect in gpc: "<<(inf_sum*1.0)/(sample_mc)<<" with "<<seed.size()<<endl;
+         inf.push_back(inf_sum*1.0/(sample_mc));
+      }
+      free(counter);
+      while (!QueueS.empty())
+      {
+         QueueS.pop();
+      }
+      tim.push_back(duration);
+      k += 10;
+      cout<<"=========================="<<endl;
+      cout<<"while k = "<<k<<", min = "<<inf_min*1.0/mc<<endl;
+   }
+   cout<<endl;
+   values res_log ={Q,inf,tim};
+   return res_log;
+}
+
 
 
 values greedy_hyper(InfGraph g, int k, int mc, double epsilon){
